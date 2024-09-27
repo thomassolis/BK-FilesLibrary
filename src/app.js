@@ -10,6 +10,6 @@ app.use(express.json()); // Este middleware permite que Express procese JSON en 
 app.use(session({ secret: process.env.clave_CS, resave: false}));
 
 
-app.use('/auth', authroute);
+app.use('/api/auth', authroute);
 
 export default app;

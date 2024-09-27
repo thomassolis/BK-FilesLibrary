@@ -3,6 +3,6 @@ import { controladorRutaLoginPost } from '../controllers/RouteLogin/route.login.
 
 const router = Router();
 
-router.post('/login', controladorRutaLoginPost);
+router.get('/login', controladorRutaLoginPost);
 
 export { router as authroute };

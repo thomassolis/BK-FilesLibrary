@@ -1,31 +1,31 @@
 import CustomError from "../../errors/CustomErros.js";
+import { UserBannedError } from "../../errors/UserBannedError.js";
 import { validacionUsuario } from "../../querys/Login/login.js";
-
 export const controladorRutaLoginPost = async (req, res) => {
     console.log(req.body)
     const { Email, Password } = req.body;
     try
     {
         const userData = await validacionUsuario(Email, Password);
-        res.status(200).json({Data: userData, success: true });
+        res.status(200).json({ Data: userData, success: true, error: false });
     } 
 
     catch (error)
     {
         console.error('Error al iniciar sesión:', error.message);
-        if (error instanceof CustomError)
-        {
-            res.status(error.statusCode).json({
-                error: true,
-                message: error.message
-            });
-        }
+        if (error instanceof CustomError) {
+            const response = { error: true, success: false, message: error.message, };
+            
+            if (error instanceof UserBannedError)
+            {
+                response.segundosBan = error.segundosBan;
+                response.isBan = error.isBan;
+            }
+            res.status(error.statusCode).json(response);
+        } 
         else
         {
-            res.status(500).json({
-                error: true,
-                message: "Ha ocurrido un error inesperado"
-            });
+            res.status(500).json({ error: true, success: false, message: "Ha ocurrido un error inesperado" });
         }
     }
 };

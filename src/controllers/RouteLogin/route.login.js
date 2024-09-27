@@ -2,15 +2,13 @@ import CustomError from "../../errors/CustomErros.js";
 import { validacionUsuario } from "../../querys/Login/login.js";
 
 export const controladorRutaLoginPost = async (req, res) => {
-    const { email, password } = req.body;
+    console.log(req.body)
+    const { Email, Password } = req.body;
     try
     {
-        const userData = await validacionUsuario(email, password);
+        const userData = await validacionUsuario(Email, Password);
         res.status(200).json({Data: userData, success: true });
     } 
-
-
-
 
     catch (error)
     {

@@ -1,8 +1,5 @@
 import jwt from 'jsonwebtoken';
-
-
 const JWT_SECRET = 'por la causa!';
-
 
 export const generateJWT = async (userData) => {
     const payload = {
@@ -22,4 +19,21 @@ export const generateJWT = async (userData) => {
     );
 
     return token;
+};
+
+export const authenticateJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, JWT_SECRET, (err, user) => {
+            if (err)
+            {
+                return res.sendStatus(403).json({message:"Token Invalido o No proporcionado"});
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401).json({message:"Token Invalido o No proporcionado"});
+    }
 };

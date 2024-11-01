@@ -12,6 +12,7 @@ const validFolders = ['ADM', 'OPE', 'GER'];
 // Función recursiva para obtener archivos y subcarpetas
 let fileId = 0;
 import multer from "multer";
+import {connectDB, pool} from '../../../config/db.js'
 
 let dataTest =[{
     userName: "THOMAS",
@@ -56,34 +57,34 @@ const getFilesRecursively = async (folderPath) => {
 // Importar la base de datos o modelo si fuera necesario
 // const HistoryModel = require('path_to_model');
 
-export const oficialHistory = async (req, res) => {
-    try {
-        // Aquí podrías obtener datos de la base de datos si lo necesitaras
-        // const historyData = await HistoryModel.find(); // Suponiendo que tienes un modelo llamado HistoryModel
+// export const oficialHistory = async (req, res) => {
+//     try {
+//         // Aquí podrías obtener datos de la base de datos si lo necesitaras
+//         // const historyData = await HistoryModel.find(); // Suponiendo que tienes un modelo llamado HistoryModel
 
-        // Para este ejemplo, vamos a simular algunos datos
-        const historyData = [
-            { id: 1, event: "File uploaded", timestamp: "2024-10-21 10:30:00" },
-            { id: 2, event: "File deleted", timestamp: "2024-10-22 14:00:00" },
-            { id: 3, event: "File downloaded", timestamp: "2024-10-23 09:00:00" }
-        ];
+//         // Para este ejemplo, vamos a simular algunos datos
+//         const historyData = [
+//             { id: 1, event: "File uploaded", timestamp: "2024-10-21 10:30:00" },
+//             { id: 2, event: "File deleted", timestamp: "2024-10-22 14:00:00" },
+//             { id: 3, event: "File downloaded", timestamp: "2024-10-23 09:00:00" }
+//         ];
 
-        // Enviar la respuesta con los datos del historial
-        res.status(200).json({
-            success: true,
-            data: historyData,
-            message: 'Historial obtenido exitosamente'
-        });
+//         // Enviar la respuesta con los datos del historial
+//         res.status(200).json({
+//             success: true,
+//             data: historyData,
+//             message: 'Historial obtenido exitosamente'
+//         });
 
-    } catch (error) {
-        // En caso de error, devolvemos una respuesta de error
-        console.error(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener el historial'
-        });
-    }
-};
+//     } catch (error) {
+//         // En caso de error, devolvemos una respuesta de error
+//         console.error(error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Error al obtener el historial'
+//         });
+//     }
+// };
 
 
 
@@ -118,9 +119,10 @@ export const controladorRutaLoginPost = async (req, res) => {
     }
 };
 
+
+
 export const controladorRutaAuthenticationPost = async (req, res) => {
     const { authentication } = req.body;  // Obtener el código de autenticación enviado desde el frontend
-
     try {
         // Aquí puedes simular una validación del código de autenticación.
         // Para este ejemplo, asumimos que el código correcto es "123456".
@@ -219,7 +221,7 @@ export const ctrFilesByUser = async (req, res) => {
 
 
         // Enviar la estructura de archivos como respuesta
-        console.log(files)
+      
         res.json(files);
     } catch (error) {
         console.error("Error al leer los archivos:", error);
@@ -309,12 +311,6 @@ export const adminFiles = (req, res) => {
   }
 
 
-export const getHistorial = (req, res) => {
-    // Usar multer para manejar la subida
-    // AQUI CONSULTO A LA BASE DE DATOS QUE ME TODAS LAS SOLICITUDES 
-
-   res.status(200).json(dataTest)
-};
 
 export const getHistorialAdmin = (req, res) => {
     // Usar multer para manejar la subida
@@ -331,23 +327,6 @@ export const getHistorialAdmin = (req, res) => {
     dataTest=newDatatest
    res.status(200).json( newDatatest)
   };
-
-  export const getManagerApproval = (req, res) =>{
-    const {userName, textAreaValue, fileName, OPEUserName, OPEComment, fileId} = req.body
-
-    console.log(userName);
-    console.log(textAreaValue);
-    console.log(fileName);
-    console.log(OPEUserName);
-    console.log(OPEComment);
-    console.log(fileId);
-
-    res.status(200).json({
-        success: true,
-        status: 200,
-        Data: 'Datos recibidos'  // Aquí enviamos el objeto con los datos simulados
-    });
-  }
 
 
   

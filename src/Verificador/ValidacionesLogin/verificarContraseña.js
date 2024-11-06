@@ -10,3 +10,15 @@ export const verificarContraseña = async (password, hash, usuario, intentos) =>
         throw new InvalidCredentialsError
     }
 };
+
+
+export const generarHashContraseña = async (password) => {
+    const saltRounds = 10; // Número de rondas de sal para hacer más seguro el hash
+    try {
+        const hash = await bcrypt.hash(password, saltRounds);
+        return hash;
+    } catch (error) {
+        throw new Error('Error al generar el hash de la contraseña');
+    }
+};
+

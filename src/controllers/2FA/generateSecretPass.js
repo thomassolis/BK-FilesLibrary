@@ -5,6 +5,5 @@ export const generateSecretPass = () => {
         name: "BibliotecaMLC",
         length: 20
     });
-
     return secret;
 }

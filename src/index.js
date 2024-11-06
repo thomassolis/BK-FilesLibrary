@@ -4,6 +4,9 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
+import {Server as SocketServer} from 'socket.io'
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -13,6 +16,21 @@ const sslOptions = {
 };
 
 const server = https.createServer(sslOptions, app);
+
+const io = new SocketServer(server);
+io.on('connection', socket => {
+  // console.log('Client Connected');
+
+  socket.on('message', (data) =>{//RECIBE DATOS DEL FRONT
+    socket.broadcast.emit('message', data) //EMITE UN EVENTO A TODOS LOS USUARIOS CONECTADOS DEL FRONT
+    console.log(data);
+  })
+
+  socket.on('messageGerencia', (data) =>{
+    socket.broadcast.emit('messageGerencia', data)    
+    console.log('messageGerencia', data);
+  })
+})
 
 const PORT = 3000;
 

@@ -2,12 +2,14 @@ import qrcode from 'qrcode';
 import speakeasy from 'speakeasy';
 
 export const generateQRCode = async (secret) => {
-    const otpauth_url = speakeasy.otpauthURL({ 
-        secret: secret.base32, 
+    const otpauth_url = speakeasy.otpauthURL({
+        secret: secret,   // Pasar el secreto en ASCII aquí
         label: 'BibliotecaMLC', 
-        issuer: 'BibliotecaMLC' 
+        issuer: 'BibliotecaMLC',
+        encoding: 'ascii'
     });
 
-    const qrCodeDataURL = await qrcode.toDataURL(otpauth_url);
-    return qrCodeDataURL;
+    const filePath = './qrcode_bibliotecaMLC.png';
+    await qrcode.toFile(filePath, otpauth_url);
+    return filePath;
 };

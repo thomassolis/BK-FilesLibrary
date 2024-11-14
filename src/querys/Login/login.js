@@ -20,7 +20,7 @@ export const validacionUsuario = async (Email, PassWord) => {
                         U.[num_intentos],
                         U.[isBaned],
                         U.[fecha_baneo],
-                        R.[Nombre] AS nombre_rol
+                        R.[id_rol] AS nombre_rol
                     FROM 
                         [BibliotecaMLC].[dbo].[Usuarios] U
                     LEFT JOIN 
@@ -32,9 +32,7 @@ export const validacionUsuario = async (Email, PassWord) => {
 
         const user = result.recordset[0];
         
-        if (!user) {
-            throw new InvalidCredentialsError
-        }
+        if (!user) { throw new InvalidCredentialsError}
 
         verificarBaneo(user)
         await verificarContraseña(PassWord, user.contraseña, user.id_usuario, user.num_intentos)

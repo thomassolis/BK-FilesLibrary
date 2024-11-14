@@ -18,8 +18,7 @@ const poolConnect = pool.connect(); // Esto inicia la conexión al momento de ca
 
 const connectDB = async () => {
     try {
-        await poolConnect; // Espera a que el pool se conecte
-        console.log('Conexión a la base de datos establecida');
+        await poolConnect;
     } catch (error) {
         console.error('Error al conectar a la base de datos:', error.message);
         throw new Error('No se pudo conectar a la base de datos');

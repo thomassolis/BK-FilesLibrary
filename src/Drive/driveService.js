@@ -1,7 +1,7 @@
-
-// Archivo: driveService.js
 import { google } from 'googleapis';
+import fs from 'fs';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 const authenticate = () => {
     const keyFilePath = path.join(process.cwd(), 'src/Drive', 'biblioteca-441114-764b4d111738.json');
@@ -48,21 +48,48 @@ export const listFilesInDrive = async (DriveIDs) => {
     const auth = authenticate();
     const drive = google.drive({ version: 'v3', auth });
     const mainFolderId = '1sF7TjGM_UTN0XnHsv4kECpqYdD26I3lf';
-
-    // Ejecuta la función recursiva con `isRoot = true` para evitar "files" en la raíz
     const driveStructure = await listFolderContentsRecursively(drive, mainFolderId, DriveIDs, true);
 
-    //console.log(JSON.stringify(driveStructure, null, 2));
     return driveStructure;
 };
 
+export const ObtenerArchivoDesdeDrive = async (Drive_Id) => {
+    const auth = authenticate();
+    const drive = google.drive({ version: 'v3', auth });
 
+    try {
+        const tempFilePath = path.join(process.cwd(), 'temp', `${uuidv4()}.pdf`);
 
-export const ObtenerArchivoDesdeDrive = async (Drive_Id)=>
-{
-    //quiero que me ayudes a buscar el Drive_Id para y lo descargue 
+        if (!fs.existsSync(path.join(process.cwd(), 'temp'))) {
+            fs.mkdirSync(path.join(process.cwd(), 'temp'));
+        }
 
-}
+        const response = await drive.files.get(
+            { fileId: Drive_Id, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        const dest = fs.createWriteStream(tempFilePath);
+        await new Promise((resolve, reject) => {
+            response.data
+                .on('end', () => {
+                    console.log('Archivo descargado correctamente.');
+                    resolve();
+                })
+                .on('error', (err) => {
+                    console.error('Error al descargar el archivo:', err);
+                    reject(err);
+                })
+                .pipe(dest);
+        });
+
+        return tempFilePath;
+
+    } catch (error) {
+        console.error('Error al obtener el archivo desde Drive:', error.message);
+        throw new Error('Error al descargar el archivo desde Google Drive');
+    }
+};
 
 export const listNonFolderFilesInDrive = async () => {
     const auth = authenticate();

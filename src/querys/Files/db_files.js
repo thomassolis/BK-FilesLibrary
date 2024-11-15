@@ -52,9 +52,8 @@ export const verificar_Permiso_Para_Archivo = async (rol, id_archivo) => {
 
         const result = await pool.request()
             .input('rol', sql.VarChar, rol)
-            .input('id_archivo', sql.VarChar, id_archivo)
+            .input('id_archivo', sql.Int, id_archivo)
             .query(query);
-
        return result.recordset
     } catch (error) {
         console.error('Error al obtener archivos permitidos:', error.message);

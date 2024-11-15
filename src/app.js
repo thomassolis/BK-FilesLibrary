@@ -5,33 +5,31 @@ import { authroute } from './routes/auth.route.js';
 import {filesroute} from './routes/files.route.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser'
+import { solicitudesRoutes } from './routes/solicitudes.route.js';
 
 dotenv.config();
 
 const app = express();
-app.use(express.json()); // Este middleware permite que Express procese JSON en req.body
+app.use(express.json());
 
-// para session
 app.use(session({ 
     secret: process.env.clave_CS, 
     resave: false, 
-    saveUninitialized: false, // Asegúrate de no guardar sesiones vacías
+    saveUninitialized: false,
 }));
 
 app.use(cookieParser())
 
-// cors
 const corsOptions = {
-    origin: 'https://localhost:5173', // Cambia esto a la URL de tu frontend
-    credentials: true, // Permite cookies y credenciales
+    origin: 'https://localhost:5173',
+    credentials: true,
 };
 
 app.use(cors(corsOptions));
 
-// Define tus rutas aquí
 app.use('/api/auth', authroute);
-
 app.use('/api/files', filesroute);
+app.use('/api/solicitud', solicitudesRoutes)
 
 
 export default app;

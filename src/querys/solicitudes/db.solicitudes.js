@@ -1,5 +1,5 @@
 
-import { pool } from "../../../config/db.js";
+import { connectDB, pool} from "../../../config/db.js";
 import  sql from "mssql";
 
 export const db_Obtener_Archivos_Permitidos_Por_Usuario = async (rol) => {
@@ -33,132 +33,62 @@ export const db_Obtener_Archivos_Permitidos_Por_Usuario = async (rol) => {
 };
 
 export const db_Insertar_Solicitud_Nueva = async (data) => {    
-    const { userName, textAreaValue, fileName, OPEUserName, OPEComment, fileId, approvedGER, folder, approvedADM } = req.body;
-
     try {
-        const idUsuario = req.user.id_usuario;  
+        await connectDB()
+        const query = `
+            INSERT INTO Solicitudes (Fecha_Solicitud, motivo_solicitud, comentarioGerente, aprobacionGerencia, id_archivo, id_solicitante, id_gerente, status)
+            VALUES (@Fecha_Solicitud, @OPE_Comentario, @GEN_Comentario, @GEN_Aproved, @ID_Archivo, @OPE_UserID, @GEN_UserID, @Estado_Solicitud);
+        `;
 
-        if(req.user.nombre_rol === 'OPERADOR'){
-            console.log('fileId: ', fileId);
-    
-            const result = await pool.request()
-            .input('idUsuario', sql.Int, idUsuario)
-            .input('TextAreaValue', sql.NVarChar, textAreaValue)
-            .input('FileId', sql.Int, fileId)
-            .query(`
-                INSERT INTO Solicitudes (id_solicitante, id_archivo, motivo_solicitud, fecha_aprobacion_administrativa, fecha_aprobacion_gerencial)
-                VALUES (@idUsuario, 5, @textAreaValue, null, null)
-            `);
+        // Ejecutar el query usando los parámetros proporcionados
+        const result = await pool.request()
+            .input('Fecha_Solicitud', sql.DateTime, data.Fecha_Solicitud)
+            .input('OPE_Comentario', sql.VarChar(sql.MAX), data.OPE_Comentario)
+            .input('GEN_Comentario', sql.VarChar(sql.MAX), data.GEN_Comentario || null)
+            .input('GEN_Aproved', sql.Bit, data.GEN_Aproved)
+            .input('ID_Archivo', sql.Int, data.ID_Archivo)
+            .input('OPE_UserID', sql.Int, data.OPE_UserID)
+            .input('GEN_UserID', sql.Int, data.GEN_UserID || null)
+            .input('Estado_Solicitud', sql.VarChar(sql.MAX), data.Estado_Solicitud || null)
 
+            .query(query);
 
-            console.log(req.body)
-
-        }else if(req.user.nombre_rol === 'GERENCIA' && approvedGER == undefined){
-     
-            const result = await pool.request()    
-            .input('idUsuario', sql.Int, idUsuario)        
-            .input('TextAreaValue', sql.NVarChar, textAreaValue)
-            .input('FileId', sql.Int, fileId)
-            .input('approvedGER', sql.Int, approvedGER)
-            .query(`
-                INSERT INTO Solicitudes (id_gerente, comentarioGerente, aprobacionGerencia, fecha_aprobacion_gerencial, fecha_solicitud, id_archivo, id_solicitante, motivo_solicitud)
-                    VALUES
-                        (@idUsuario, @TextAreaValue, 1, GETDATE(), GETDATE(), 5, @idUsuario, @TextAreaValue)                    
-            `);
-
-            console.log(req.body)
-        }else if(req.user.nombre_rol === 'GERENCIA' && approvedGER == true){
-     
-            const result = await pool.request()    
-            .input('idUsuario', sql.Int, idUsuario)        
-            .input('TextAreaValue', sql.NVarChar, textAreaValue)
-            .input('FileId', sql.Int, fileId)
-            .input('approvedGER', sql.Int, approvedGER)
-            .query(`
-                UPDATE Solicitudes 
-                    SET 
-                        id_gerente =  @idUsuario,
-                        comentarioGerente = @TextAreaValue,
-                        aprobacionGerencia = 1,
-                        fecha_aprobacion_gerencial = GETDATE()
-                    WHERE
-                        id_archivo = 5
-            `);
-
-            console.log(req.body)
-        }else if(req.user.nombre_rol === 'GERENCIA' && approvedGER == false){
-           
-            const result = await pool.request()    
-            .input('idUsuario', sql.Int, idUsuario)        
-            .input('UserName', sql.NVarChar, userName)
-            .input('TextAreaValue', sql.NVarChar, textAreaValue)
-            .input('FileName', sql.NVarChar, fileName)
-            .input('OPEUserName', sql.NVarChar, OPEUserName)
-            .input('OPEComment', sql.NVarChar, OPEComment)
-            .input('FileId', sql.Int, fileId)
-            .input('approvedGER', sql.Int, approvedGER)
-            .query(`
-                UPDATE Solicitudes 
-                    SET 
-                        id_gerente =  @idUsuario,
-                        comentarioGerente = @TextAreaValue,
-                        aprobacionGerencia = 0,
-                        fecha_aprobacion_gerencial = GETDATE()
-                    WHERE
-                        id_archivo = 5
-            `);
-
-            console.log(req.body)
-        }else if(req.user.nombre_rol === 'ADMINISTRADOR' && approvedADM== true){            
-            const result = await pool.request()    
-            .input('idUsuario', sql.Int, idUsuario)        
-            .input('TextAreaValue', sql.NVarChar, textAreaValue)
-            .input('FileId', sql.Int, fileId)
-            .input('approvedGER', sql.Int, approvedGER)
-            .query(`
-                UPDATE Solicitudes 
-                    SET 
-                        id_administrador =  @idUsuario,
-                        comentarioAdministrador = @TextAreaValue,
-                        aprobacionAdministracion = 1,
-                        fecha_aprobacion_administrativa = GETDATE()
-                    WHERE
-                        id_archivo = 5
-            `);
-
-            console.log(req.body)
-        }else if(req.user.nombre_rol === 'ADMINISTRADOR' && approvedADM== false){            
-            const result = await pool.request()    
-            .input('idUsuario', sql.Int, idUsuario)        
-            .input('TextAreaValue', sql.NVarChar, textAreaValue)
-            .input('FileId', sql.Int, fileId)
-            .input('approvedGER', sql.Int, approvedGER)
-            .query(`
-                UPDATE Solicitudes 
-                    SET 
-                        id_administrador =  @idUsuario,
-                        comentarioAdministrador = @TextAreaValue,
-                        aprobacionAdministracion = 0,
-                        fecha_aprobacion_administrativa = GETDATE()
-                    WHERE
-                        id_archivo = 5
-            `);
-
-            console.log(req.body)
-        }
-
-        
-        res.status(200).json({
-            success: true,
-            status: 200,
-            data: 'Datos insertados en la base de datos'
-        });
-    } catch (error) {
-        console.error('Error al insertar datos en la base de datos:', error.message);
-        res.status(500).json({
-            success: false,
-            status: 500,
-            message: 'Error al insertar datos en la base de datos'
-        });
+        return true
+    } 
+    catch (error)
+    {
+        console.log('Error al insertar datos en la base de datos:', error.message);
+        return false
     }
 };
+
+
+export const db_Obtener_Solicitudes_Pendientes_Gerente = async(rol) =>
+{
+    try
+    {
+        await connectDB()
+        const query = `
+           Select
+                Solicitudes.id_solicitud,
+                Archivos.nombre as 'Nombre_del_archivo',
+                Usuarios.nombre as 'Nombre_de_solicitante',
+                Solicitudes.motivo_solicitud AS 'motivo_solicitud'
+            FROM Solicitudes
+                INNER JOIN
+                    Archivos on Archivos.id_archivo = Solicitudes.id_archivo
+                INNER JOIN
+                    Usuarios on Usuarios.id_usuario = Solicitudes.id_solicitante
+                      where status ='SOLICITADA'
+            order by id_solicitud desc
+        `;
+
+        const result = await pool.request().query(query);
+        return result.recordset
+    }
+    catch (error)
+    {
+        console.log(error)
+        return {}
+    }
+}

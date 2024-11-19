@@ -1,43 +1,57 @@
-import {ObtenerFechaYHoraActual } from "../Fechas/fechasHoras.js";
+import { ObtenerFechaYHoraActual } from "../Fechas/fechasHoras.js";
 
 export const ordernarDatosDeEntrada = (data, user) => {
     const rol = user.nombre_rol;
-    
-    let fecha_solicitud;
+
+    let fecha_solicitud = ObtenerFechaYHoraActual();
     let OPE_Comentario = null;
-    let ADM_Comentario = null;
-    let ADM_Aproved = false;
+    let GEN_Comentario = null;
+    let GEN_Aproved = false;
     const id_Archivo = data.fileId;
     let OPE_UserID = null;
-    let ADM_UserID = null;
-    let Estado_Solicitud = null
+    let GEN_UserID = null;
+    let Estado_Solicitud = null;
+    let Fecha_AprovacionGerencia = null;
+
+    const comentario_truncado = data.motivo_solicitud.length > 500
+        ? data.motivo_solicitud.slice(0, 500).toUpperCase()
+        : data.motivo_solicitud.toUpperCase();
 
     if (rol === 'OPE') {
-        fecha_solicitud = ObtenerFechaYHoraActual();
-        OPE_Comentario = data.motivo_solicitud.length > 500 ? data.motivo_solicitud.slice(0, 500).toUpperCase(): data.motivo_solicitud.toUpperCase();
-        OPE_UserID = user.id_usuario
-        Estado_Solicitud='SOLICITADA'
+        OPE_Comentario = comentario_truncado;
+        OPE_UserID = user.id_usuario;
+        Estado_Solicitud = 'SOLICITADA';
     }
 
     if (rol === 'GER') {
-        fecha_solicitud = ObtenerFechaYHoraActual();
-        ADM_Comentario = data.motivo_solicitud.length > 500 ? data.motivo_solicitud.slice(0, 500).toUpperCase() : data.motivo_solicitud.toUpperCase();
-        OPE_Comentario = data.motivo_solicitud.length > 500 ? data.motivo_solicitud.slice(0, 500).toUpperCase() : data.motivo_solicitud.toUpperCase();
-        ADM_Aproved = true;
-        OPE_UserID = user.id_usuario
-        ADM_UserID = user.id_usuario
-        Estado_Solicitud='APROVED GERENTE'
+        GEN_Comentario = comentario_truncado;
+        OPE_Comentario = comentario_truncado;
+        GEN_Aproved = true;
+        OPE_UserID = user.id_usuario;
+        GEN_UserID = user.id_usuario;
+        Estado_Solicitud = 'APROBACION 1';
+        Fecha_AprovacionGerencia = ObtenerFechaYHoraActual();
     }
 
     return {
         Fecha_Solicitud: fecha_solicitud,
         OPE_Comentario: OPE_Comentario,
-        ADM_Comentario: ADM_Comentario,
-        ADM_Aproved: ADM_Aproved,
+        GEN_Comentario: GEN_Comentario,
+        GEN_Aproved: GEN_Aproved,
         ID_Archivo: id_Archivo,
         OPE_UserID: OPE_UserID,
-        ADM_UserID: ADM_UserID || null,
-        Estado_Solicitud:Estado_Solicitud
+        GEN_UserID: GEN_UserID || null,
+        Estado_Solicitud: Estado_Solicitud,
     };
 };
 
+
+
+export const OrdernarDataSalidadPentiendesGerente = (data) => {
+    return data.map(item => ({
+        ID_Solicitudes: item.id_solicitud,
+        Nombre_del_archivo: item.Nombre_del_archivo,
+        Nombre_de_solicitante: item.Nombre_de_solicitante,
+        motivo_solicitud: item.motivo_solicitud
+    }));
+};

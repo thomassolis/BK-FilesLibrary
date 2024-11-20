@@ -95,7 +95,7 @@ export const ctr_VerSolicitudesPendientesAdministrador= async (req, res) => {
         if (!SolicitudesPendientes || SolicitudesPendientes.length === 0) {
             return res.status(404).json({ success: false, message: 'No hay solicitudes pendientes.' });
         }
-  
+
         const SolicitudesPendientesOrdenadas = OrdernarDataSalidadPentiendesAdministrador(SolicitudesPendientes)
         return res.status(200).json({ success: true, data: SolicitudesPendientesOrdenadas });
     } 
@@ -117,7 +117,7 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
         }
   
         const Data = OrdenarDatosEntradaAprobacionAdministrador(req.body, req.user.id_usuario);
-        console.log(Data)
+
         const resultado = await db_Actualizar_Solicitud_Pendientes_Administrador(Data);
   
         if (resultado.success) {

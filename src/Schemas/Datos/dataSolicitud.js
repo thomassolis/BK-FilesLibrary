@@ -84,13 +84,17 @@ export const OrdenarDatosEntradaAprobacionGerente = (data, idUser) => {
 
 
 export const OrdernarDataSalidadPentiendesAdministrador = (data) => {
+    const toUpperCaseSafe = (value) => (value ? value.toUpperCase() : null);
     return data.map(item => ({
         ID_Solicitudes: item.id_solicitud,
-        Nombre_del_archivo: item.Nombre_del_archivo,
-        Nombre_de_solicitante: item.Nombre_de_solicitante,
-        motivo_solicitud: item.motivo_solicitud
+        Nombre_de_solicitante: toUpperCaseSafe(item.Nombre_solicitante),
+        Gerente_que_aprobo_solicitud: toUpperCaseSafe(item.Nombre_Gerente),
+        Rol_De_Solicitante: toUpperCaseSafe(item.Rol_Solicitante),
+        motivo_solicitud: toUpperCaseSafe(item.Comentario_Operador),
+        comentarioGerente: toUpperCaseSafe(item.Comentario_Gerente)
     }));
 };
+
 
 
 export const OrdenarDatosEntradaAprobacionAdministrador = (data, idUser) => {

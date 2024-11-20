@@ -63,7 +63,7 @@ export const db_Insertar_Solicitud_Nueva = async (data) => {
 };
 
 
-export const db_Obtener_Solicitudes_Pendientes_Gerente = async(rol) =>
+export const db_Obtener_Solicitudes_Pendientes_Gerente = async() =>
 {
     try
     {
@@ -123,28 +123,33 @@ export const db_Actualizar_Solicitud_Pendientes_Gerente = async(data)=>
 }
 
 
-export const db_Obtener_Solicitudes_Pendientes_Administrador = async(rol) =>
+export const db_Obtener_Solicitudes_Pendientes_Administrador = async() =>
     {
         try
         {
             await connectDB()
             const query = `
-               Select
+            SELECT
                     Solicitudes.id_solicitud,
-                    Archivos.nombre as 'Nombre_del_archivo',
-                    Usuarios.nombre as 'Nombre_de_solicitante',
-                    Solicitudes.motivo_solicitud AS 'motivo_solicitud'
-                FROM Solicitudes
-                    INNER JOIN
-                        Archivos on Archivos.id_archivo = Solicitudes.id_archivo
-                    INNER JOIN
-                        Usuarios on Usuarios.id_usuario = Solicitudes.id_solicitante
-                          where status ='APROBACION 1'
-                order by id_solicitud desc
-            `;
-    
-            const result = await pool.request().query(query);
-            return result.recordset
+                    Solicitudes.motivo_solicitud AS 'Comentario_Operador',
+                    Solicitudes.comentarioGerente AS 'Comentario_Gerente',
+                    Archivos.nombre AS 'Nombre_Archivo',
+                    Solicitante.nombre AS 'Nombre_solicitante',
+                    Gerente.nombre AS 'Nombre_Gerente',
+                    Solicitante.id_rol AS 'Rol_Solicitante'
+            FROM Solicitudes
+            INNER JOIN Archivos 
+                    ON Archivos.id_archivo = Solicitudes.id_archivo
+            INNER JOIN Usuarios AS Solicitante
+                    ON Solicitante.id_usuario = Solicitudes.id_solicitante
+            LEFT JOIN Usuarios AS Gerente
+                    ON Gerente.id_usuario = Solicitudes.id_gerente
+            WHERE status = 'APROBACION 1'
+            ORDER BY Solicitudes.id_solicitud DESC
+                `;
+
+        const result = await pool.request().query(query);
+        return result.recordset;
         }
         catch (error)
         {

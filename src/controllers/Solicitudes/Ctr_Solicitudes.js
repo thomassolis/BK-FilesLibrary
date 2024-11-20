@@ -1,7 +1,8 @@
-import { verificar_Permiso_Para_Archivo } from "../../querys/Files/db_files.js";
+import { ObtenerArchivoDesdeDrive } from "../../Drive/driveService.js";
+import { obtener_Drive_ID_BY_Solicitud, verificar_Permiso_Para_Archivo } from "../../querys/Files/db_files.js";
 import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente } from "../../querys/solicitudes/db.solicitudes.js";
 import { OrdenarDatosEntradaAprobacionAdministrador, OrdenarDatosEntradaAprobacionGerente, OrdernarDataSalidadPentiendesAdministrador, OrdernarDataSalidadPentiendesGerente, ordernarDatosDeEntrada } from "../../Schemas/Datos/dataSolicitud.js";
-
+import fs from 'fs'
 export const ctr_AgregarNuevaSolicitud = async (req, res) => {
   const rol = req.user.nombre_rol;
   const data = ordernarDatosDeEntrada(req.body, req.user);
@@ -110,19 +111,27 @@ export const ctr_VerSolicitudesPendientesAdministrador= async (req, res) => {
 export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
     try {
         const rol = req.user.nombre_rol;
-  
         if (rol !== 'ADM')
         {
             return res.status(403).json({success: false, message: 'No tienes permiso para realizar esta acción. Solo un gerente puede aprobar o rechazar solicitudes.'});
         }
   
         const Data = OrdenarDatosEntradaAprobacionAdministrador(req.body, req.user.id_usuario);
-
         const resultado = await db_Actualizar_Solicitud_Pendientes_Administrador(Data);
   
         if (resultado.success) {
             if (Data.FueAprobado)
             {
+                const Drive_ID_Email = await  obtener_Drive_ID_BY_Solicitud(Data.IdSolicitud)
+                const tempFilePath = await ObtenerArchivoDesdeDrive(Drive_ID_Email.driveID);
+
+                if (tempFilePath) {
+                    console.log(tempFilePath)
+                   // fs.unlinkSync(tempFilePath);
+                } else {
+                    console.log('NO EXISTE EL ARCHIVO');
+                }
+
               return res.status(200).json({ success: true, message: 'Solicitud aprobada exitosamente. Ha sido enviada a los administradores.' });
             } 
             else

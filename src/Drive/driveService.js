@@ -58,12 +58,19 @@ export const ObtenerArchivoDesdeDrive = async (Drive_Id) => {
     const drive = google.drive({ version: 'v3', auth });
 
     try {
-        const tempFilePath = path.join(process.cwd(), 'temp', `${uuidv4()}.pdf`);
+        // Obtener metadatos del archivo para recuperar el nombre real
+        const fileMetadata = await drive.files.get({ fileId: Drive_Id, fields: 'name' });
 
+        const fileName = fileMetadata.data.name; // Nombre real del archivo
+        const shortUUID = uuidv4().slice(0, 14); // Reducir el UUID a 14 caracteres
+        const tempFilePath = path.join(process.cwd(), 'temp', `${shortUUID}-${fileName}`);
+
+        // Crear directorio 'temp' si no existe
         if (!fs.existsSync(path.join(process.cwd(), 'temp'))) {
             fs.mkdirSync(path.join(process.cwd(), 'temp'));
         }
 
+        // Descargar el archivo desde Google Drive
         const response = await drive.files.get(
             { fileId: Drive_Id, alt: 'media' },
             { responseType: 'stream' }
@@ -83,13 +90,14 @@ export const ObtenerArchivoDesdeDrive = async (Drive_Id) => {
                 .pipe(dest);
         });
 
-        return tempFilePath;
+        return tempFilePath; // Ruta al archivo descargado con el nombre modificado
 
     } catch (error) {
         console.error('Error al obtener el archivo desde Drive:', error.message);
-        throw new Error('Error al descargar el archivo desde Google Drive');
+        return {};
     }
 };
+
 
 export const listNonFolderFilesInDrive = async () => {
     const auth = authenticate();

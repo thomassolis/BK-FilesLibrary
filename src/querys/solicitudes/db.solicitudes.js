@@ -162,20 +162,20 @@ export const db_Actualizar_Solicitud_Pendientes_Administrador = async (data) => 
     await connectDB();
     const query = `
                 UPDATE [BibliotecaMLC].[dbo].[Solicitudes]
-                    SET [comentarioGerente]  = @ComentarioGerente,
-                        [aprobacionGerencia] = @FueAprobado,
-                        [fecha_aprobacion_gerencial] = @HoraAprobacionGerente,
-                        [id_gerente] =@GerenteID,
+                    SET [comentarioAdministrador]  = @ComentarioAdmnistrador,
+                        [aprobacionAdministracion] = @FueAprobado,
+                        [fecha_aprobacion_administrativa] = @HoraAprobacionAdministrador,
+                        [id_administrador] =@AdminID,
                         [status] = @EstadoNuevo
                 WHERE id_solicitud =@IdSolicitud`;
 
     const result = await pool
       .request()
-      .input("ComentarioGerente", sql.VarChar(500), data.ComentarioGerente)
+      .input("ComentarioAdmnistrador", sql.VarChar(500), data.ComentarioAdmnistrador)
       .input("FueAprobado", sql.Bit, data.FueAprobado)
-      .input("HoraAprobacionGerente", sql.DateTime, data.HoraAprobacionGerente)
+      .input("HoraAprobacionAdministrador", sql.DateTime, data.HoraAprobacionAdministrador)
       .input("EstadoNuevo", sql.VarChar(100), data.EstadoNuevo)
-      .input("GerenteID", sql.Int, data.GerenteID)
+      .input("AdminID", sql.Int, data.AdminID)
       .input("IdSolicitud", sql.Int, data.IdSolicitud)
       .query(query);
 

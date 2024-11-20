@@ -82,11 +82,11 @@ export const OrdenarDatosEntradaAprobacionGerente = (data, idUser) => {
 }
 
 
-
 export const OrdernarDataSalidadPentiendesAdministrador = (data) => {
     const toUpperCaseSafe = (value) => (value ? value.toUpperCase() : null);
     return data.map(item => ({
         ID_Solicitudes: item.id_solicitud,
+        Nombre_del_archivo: item.Nombre_Archivo,
         Nombre_de_solicitante: toUpperCaseSafe(item.Nombre_solicitante),
         Gerente_que_aprobo_solicitud: toUpperCaseSafe(item.Nombre_Gerente),
         Rol_De_Solicitante: toUpperCaseSafe(item.Rol_Solicitante),
@@ -98,12 +98,12 @@ export const OrdernarDataSalidadPentiendesAdministrador = (data) => {
 
 
 export const OrdenarDatosEntradaAprobacionAdministrador = (data, idUser) => {
-    const ComentarioGerente = data.comentarioGerente ? data.comentarioGerente.slice(0, 500): null;
-    const FueAprobado =  data.approvedGER === true;
-    const HoraAprobacionGerente = ObtenerFechaYHoraActual()
-    const IdSolicitud = data.ID_Solicitudes
+    const ComentarioAdmnistrador = data.comentarioGerente ? data.comentarioGerente.slice(0, 500): null;
+    const FueAprobado =  data.approvedADM === true;
+    const HoraAprobacionAdministrador = ObtenerFechaYHoraActual()
+    const IdSolicitud = data.ID_Solicitudes? data.ID_Solicitudes: 106
     let EstadoNuevo
-    const GerenteID = idUser
+    const AdminID = idUser
     
     if(FueAprobado)
     {
@@ -115,11 +115,11 @@ export const OrdenarDatosEntradaAprobacionAdministrador = (data, idUser) => {
     }
 
     return {
-        ComentarioGerente,
+        ComentarioAdmnistrador,
         FueAprobado,
-        HoraAprobacionGerente,
+        HoraAprobacionAdministrador,
         IdSolicitud,
         EstadoNuevo,
-        GerenteID
+        AdminID
     }
 }

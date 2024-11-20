@@ -88,7 +88,96 @@ export const db_Obtener_Solicitudes_Pendientes_Gerente = async(rol) =>
     }
     catch (error)
     {
-        console.log(error)
         return {}
     }
 }
+
+export const db_Actualizar_Solicitud_Pendientes_Gerente = async(data)=>
+{
+    try
+    {
+        await connectDB()
+        const query = `
+        UPDATE [BibliotecaMLC].[dbo].[Solicitudes]
+            SET [comentarioGerente]  = @ComentarioGerente,
+                [aprobacionGerencia] = @FueAprobado,
+                [fecha_aprobacion_gerencial] = @HoraAprobacionGerente,
+                [id_gerente] =@GerenteID,
+                [status] = @EstadoNuevo
+        WHERE id_solicitud =@IdSolicitud`;
+
+        const result = await pool.request()
+        .input('ComentarioGerente', sql.VarChar(500), data.ComentarioGerente)
+        .input('FueAprobado', sql.Bit, data.FueAprobado)
+        .input('HoraAprobacionGerente', sql.DateTime, data.HoraAprobacionGerente)
+        .input('EstadoNuevo', sql.VarChar(100), data.EstadoNuevo)
+        .input('GerenteID', sql.Int, data.GerenteID)
+        .input('IdSolicitud', sql.Int, data.IdSolicitud)
+        .query(query);
+
+        return { success: true, rowsAffected: result.rowsAffected[0] };
+    } catch (error) {
+        console.error('Error al actualizar solicitud:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+
+export const db_Obtener_Solicitudes_Pendientes_Administrador = async(rol) =>
+    {
+        try
+        {
+            await connectDB()
+            const query = `
+               Select
+                    Solicitudes.id_solicitud,
+                    Archivos.nombre as 'Nombre_del_archivo',
+                    Usuarios.nombre as 'Nombre_de_solicitante',
+                    Solicitudes.motivo_solicitud AS 'motivo_solicitud'
+                FROM Solicitudes
+                    INNER JOIN
+                        Archivos on Archivos.id_archivo = Solicitudes.id_archivo
+                    INNER JOIN
+                        Usuarios on Usuarios.id_usuario = Solicitudes.id_solicitante
+                          where status ='APROBACION 1'
+                order by id_solicitud desc
+            `;
+    
+            const result = await pool.request().query(query);
+            return result.recordset
+        }
+        catch (error)
+        {
+            return {}
+        }
+    }
+
+export const db_Actualizar_Solicitud_Pendientes_Administrador = async (data) => {
+  try {
+    await connectDB();
+    const query = `
+                UPDATE [BibliotecaMLC].[dbo].[Solicitudes]
+                    SET [comentarioGerente]  = @ComentarioGerente,
+                        [aprobacionGerencia] = @FueAprobado,
+                        [fecha_aprobacion_gerencial] = @HoraAprobacionGerente,
+                        [id_gerente] =@GerenteID,
+                        [status] = @EstadoNuevo
+                WHERE id_solicitud =@IdSolicitud`;
+
+    const result = await pool
+      .request()
+      .input("ComentarioGerente", sql.VarChar(500), data.ComentarioGerente)
+      .input("FueAprobado", sql.Bit, data.FueAprobado)
+      .input("HoraAprobacionGerente", sql.DateTime, data.HoraAprobacionGerente)
+      .input("EstadoNuevo", sql.VarChar(100), data.EstadoNuevo)
+      .input("GerenteID", sql.Int, data.GerenteID)
+      .input("IdSolicitud", sql.Int, data.IdSolicitud)
+      .query(query);
+
+    return { success: true, rowsAffected: result.rowsAffected[0] };
+  } catch (error) {
+    console.error("Error al actualizar solicitud:", error);
+    return { success: false, error: error.message };
+  }
+};
+        

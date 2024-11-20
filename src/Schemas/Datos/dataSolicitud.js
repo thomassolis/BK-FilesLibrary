@@ -45,8 +45,6 @@ export const ordernarDatosDeEntrada = (data, user) => {
     };
 };
 
-
-
 export const OrdernarDataSalidadPentiendesGerente = (data) => {
     return data.map(item => ({
         ID_Solicitudes: item.id_solicitud,
@@ -55,3 +53,69 @@ export const OrdernarDataSalidadPentiendesGerente = (data) => {
         motivo_solicitud: item.motivo_solicitud
     }));
 };
+
+export const OrdenarDatosEntradaAprobacionGerente = (data, idUser) => {
+    const ComentarioGerente = data.comentarioGerente ? data.comentarioGerente.slice(0, 500): null;
+    const FueAprobado =  data.approvedGER === true;
+    const HoraAprobacionGerente = ObtenerFechaYHoraActual()
+    const IdSolicitud = data.ID_Solicitudes
+    let EstadoNuevo
+    const GerenteID = idUser
+
+    if(FueAprobado)
+    {
+        EstadoNuevo = "APROBACION 1"
+    }
+    else
+    {
+        EstadoNuevo = "REJECT BY GERENTE"
+    }
+
+    return {
+        ComentarioGerente,
+        FueAprobado,
+        HoraAprobacionGerente,
+        IdSolicitud,
+        EstadoNuevo,
+        GerenteID
+    }
+}
+
+
+
+export const OrdernarDataSalidadPentiendesAdministrador = (data) => {
+    return data.map(item => ({
+        ID_Solicitudes: item.id_solicitud,
+        Nombre_del_archivo: item.Nombre_del_archivo,
+        Nombre_de_solicitante: item.Nombre_de_solicitante,
+        motivo_solicitud: item.motivo_solicitud
+    }));
+};
+
+
+export const OrdenarDatosEntradaAprobacionAdministrador = (data, idUser) => {
+    const ComentarioGerente = data.comentarioGerente ? data.comentarioGerente.slice(0, 500): null;
+    const FueAprobado =  data.approvedGER === true;
+    const HoraAprobacionGerente = ObtenerFechaYHoraActual()
+    const IdSolicitud = data.ID_Solicitudes
+    let EstadoNuevo
+    const GerenteID = idUser
+    
+    if(FueAprobado)
+    {
+        EstadoNuevo = "APROBACION 2"
+    }
+    else
+    {
+        EstadoNuevo = "REJECT BY ADMINISTRADOR"
+    }
+
+    return {
+        ComentarioGerente,
+        FueAprobado,
+        HoraAprobacionGerente,
+        IdSolicitud,
+        EstadoNuevo,
+        GerenteID
+    }
+}

@@ -98,7 +98,7 @@ export const OrdernarDataSalidadPentiendesAdministrador = (data) => {
 
 
 export const OrdenarDatosEntradaAprobacionAdministrador = (data, idUser) => {
-    const ComentarioAdmnistrador = data.comentarioGerente ? data.comentarioGerente.slice(0, 500): null;
+    const ComentarioAdmnistrador = data.comentarioAdministracion ? data.comentarioAdministracion.slice(0, 500): null;
     const FueAprobado =  data.approvedADM === true;
     const HoraAprobacionAdministrador = ObtenerFechaYHoraActual()
     const IdSolicitud = data.ID_Solicitudes? data.ID_Solicitudes: 106

@@ -117,6 +117,8 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
         }
   
         const Data = OrdenarDatosEntradaAprobacionAdministrador(req.body, req.user.id_usuario);
+
+        console.log(Data)
         const resultado = await db_Actualizar_Solicitud_Pendientes_Administrador(Data);
   
         if (resultado.success) {

@@ -1,6 +1,6 @@
 import { ObtenerArchivoDesdeDrive } from "../../Drive/driveService.js";
 import { obtener_Drive_ID_BY_Solicitud, verificar_Permiso_Para_Archivo } from "../../querys/Files/db_files.js";
-import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente } from "../../querys/solicitudes/db.solicitudes.js";
+import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Historial_Administrador, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente } from "../../querys/solicitudes/db.solicitudes.js";
 import { OrdenarDatosEntradaAprobacionAdministrador, OrdenarDatosEntradaAprobacionGerente, OrdernarDataSalidadPentiendesAdministrador, OrdernarDataSalidadPentiendesGerente, ordernarDatosDeEntrada } from "../../Schemas/Datos/dataSolicitud.js";
 import fs from 'fs'
 export const ctr_AgregarNuevaSolicitud = async (req, res) => {
@@ -113,12 +113,11 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
         const rol = req.user.nombre_rol;
         if (rol !== 'ADM')
         {
-            return res.status(403).json({success: false, message: 'No tienes permiso para realizar esta acción. Solo un gerente puede aprobar o rechazar solicitudes.'});
+            return res.status(403).json({success: false, message: 'No tienes permiso para realizar esta acción. Solo un Administrador puede aprobar o rechazar solicitudes.'});
         }
   
         const Data = OrdenarDatosEntradaAprobacionAdministrador(req.body, req.user.id_usuario);
 
-        console.log(Data)
         const resultado = await db_Actualizar_Solicitud_Pendientes_Administrador(Data);
   
         if (resultado.success) {
@@ -156,3 +155,23 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
         });
     }
   };
+
+
+
+export const ctr_ObtenerHistorialAdministrador = async (req, res)=> {
+    try {
+        const rol = req.user.nombre_rol;
+        if (rol !== 'ADM')
+        {
+            return res.status(403).json({success: false, message: 'No tienes permiso para realizar esta acción. Solo un Administrador puede ver el historial de solictudes.'});
+        }
+        
+        const DataHistorial = await db_Obtener_Historial_Administrador()
+        res.json({success:true, Data: DataHistorial})
+
+    }
+    catch (error)
+    {
+
+    }
+}

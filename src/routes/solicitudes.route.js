@@ -2,7 +2,7 @@ import { Router } from 'express';
 import verificarToken from '../controllers/jwt/loginToken.js'
 import { is2FAuthenticate } from '../controllers/2FA/verificar2FA.js';
 
-import { ctr_AgregarNuevaSolicitud, ctr_AprovacionesAdministradorSolicitudes, ctr_AprovacionesGerenteSolicitudes, ctr_VerSolicitudesPendientesAdministrador, ctr_VerSolicitudesPendientesGerencia } from '../controllers/Solicitudes/Ctr_Solicitudes.js';
+import { ctr_AgregarNuevaSolicitud, ctr_AprovacionesAdministradorSolicitudes, ctr_AprovacionesGerenteSolicitudes, ctr_ObtenerHistorialAdministrador, ctr_VerSolicitudesPendientesAdministrador, ctr_VerSolicitudesPendientesGerencia } from '../controllers/Solicitudes/Ctr_Solicitudes.js';
 
 const router = Router();
 
@@ -20,5 +20,8 @@ router.post('/aprobacion/solicitud/gerente', verificarToken, is2FAuthenticate, c
 router.get('/ver/pendientes/administrador', verificarToken, is2FAuthenticate, ctr_VerSolicitudesPendientesAdministrador); 
 
 router.post('/aprobacion/solicitud/administrador', verificarToken, is2FAuthenticate, ctr_AprovacionesAdministradorSolicitudes)
+
+router.get('/ver/historial/solicitudes/administrador', verificarToken, is2FAuthenticate, ctr_ObtenerHistorialAdministrador)
+
 
 export { router as solicitudesRoutes };

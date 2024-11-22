@@ -67,8 +67,7 @@ export const obtener_Drive_ID_BY_Solicitud =  async (id_Solicitud) =>
         await pool.connect();
         const query = `
         SELECT 
-            Arch.driveID,
-            [User].email
+            Arch.driveID
         FROM 
             [BibliotecaMLC].[dbo].[Solicitudes] AS Solic
         INNER JOIN 

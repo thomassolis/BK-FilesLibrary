@@ -14,40 +14,91 @@ export const ctr_Archivos_por_rol = async (req, res) => {
 };
 
 export const ctr_Archivos_Copia = async (req, res) => {
-    const Rol = req.user?.nombre_rol || 'OPE';
+    const Rol = req.user?.nombre_rol;
     const id_archivo = req.params.idDrive;
 
-    const esPermitidoVer = await verificar_Permiso_Para_Archivo(Rol, id_archivo);
+    // Bloque para Gerente
+    if (Rol === 'GER') {
+        const esPermitidoVer = await verificar_Permiso_Para_Archivo(Rol, id_archivo);
 
-    if (esPermitidoVer.length === 0) {
-        return res.status(403).json({ success: false, message: 'No tienes permiso para ver este archivo' });
-    }
+        if (esPermitidoVer.length === 0) {
+            return res.status(403).json({ success: false, message: 'No tienes permiso para ver este archivo' });
+        }
 
-    const archivoCopia = esPermitidoVer[0].path;
-    const filePath = path.resolve('src', archivoCopia);
+        const archivoCopia = esPermitidoVer[0].path;
+        const filePath = path.resolve('src', archivoCopia);
 
-    if (!fs.existsSync(filePath)) {
-        console.error('Archivo no encontrado en la ruta:', filePath);
-        return res.status(404).json({ success: false, message: 'Archivo no encontrado' });
-    }
+        if (!fs.existsSync(filePath)) {
+            console.error('Archivo no encontrado en la ruta:', filePath);
+            return res.status(404).json({ success: false, message: 'Archivo no encontrado' });
+        }
 
-    try {
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
-        res.sendFile(filePath, (error) => {
-            if (error) {
-                console.error('Error al enviar el archivo:', error);
-                res.status(500).json({ success: false, message: 'Error al enviar el archivo' });
+        try {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
+            return res.sendFile(filePath, (error) => {
+                if (error) {
+                    console.error('Error al enviar el archivo:', error);
+                    if (!res.headersSent) {
+                        res.status(500).json({ success: false, message: 'Error al enviar el archivo' });
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error al procesar el archivo:', error);
+            if (!res.headersSent) {
+                return res.status(500).json({ success: false, message: 'Error al procesar el archivo' });
             }
-        });
-    } catch (error) {
-        console.error('Error al procesar el archivo:', error);
-        return res.status(500).json({ success: false, message: 'Error al procesar el archivo' });
+        }
     }
+
+    // Bloque para Administrador
+    if (Rol === 'ADM') {
+        const esPermitidoVer = await verificar_Permiso_Para_Archivo(Rol, id_archivo);
+
+        if (esPermitidoVer.length === 0) {
+            return res.status(403).json({ success: false, message: 'No tienes permiso para ver este archivo' });
+        }
+
+        const DriveId = esPermitidoVer[0].driveID;
+
+        try {
+            const ArchivoPdf = await ObtenerArchivoDesdeDrive(DriveId);
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="archivo.pdf"`);
+            return res.sendFile(ArchivoPdf, (error) => {
+                if (error) {
+                    console.error('Error al enviar el archivo:', error);
+                    if (!res.headersSent) {
+                        res.status(500).json({ success: false, message: 'Error al enviar el archivo' });
+                    }
+                }
+
+                // Eliminar archivo después de 1 minuto
+                setTimeout(() => {
+                    try {
+                        fs.unlinkSync(ArchivoPdf);
+                        console.log(`Archivo temporal eliminado: ${ArchivoPdf}`);
+                    } catch (err) {
+                        console.error('Error al eliminar el archivo temporal:', err);
+                    }
+                }, 60000);
+            });
+        } catch (error) {
+            console.error('Error al procesar el archivo:', error);
+            if (!res.headersSent) {
+                return res.status(500).json({ success: false, message: 'Error al procesar el archivo' });
+            }
+        }
+    }
+
+    // Si el Rol no es GER o ADM
+    return res.status(403).json({ success: false, message: 'No tienes permiso para visualizar este archivo' });
 };
 
 export const ctr_Archivo_Drive = async (req, res) => {
-    const Rol = req.user?.nombre_rol || 'OPE';
+    const Rol = req.user.nombre_rol
     const id_archivo = req.params.idDrive;    
     const esPermitidoVer = await verificar_Permiso_Para_Archivo(Rol, id_archivo);
 

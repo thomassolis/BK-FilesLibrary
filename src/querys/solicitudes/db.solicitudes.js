@@ -69,18 +69,16 @@ export const db_Obtener_Solicitudes_Pendientes_Gerente = async() =>
     {
         await connectDB()
         const query = `
-           Select
+           SELECT
                 Solicitudes.id_solicitud,
-                Archivos.nombre as 'Nombre_del_archivo',
-                Usuarios.nombre as 'Nombre_de_solicitante',
+                Archivos.nombre AS 'Nombre_del_archivo',
+                Usuarios.nombre AS 'Nombre_de_solicitante',
                 Solicitudes.motivo_solicitud AS 'motivo_solicitud'
             FROM Solicitudes
-                INNER JOIN
-                    Archivos on Archivos.id_archivo = Solicitudes.id_archivo
-                INNER JOIN
-                    Usuarios on Usuarios.id_usuario = Solicitudes.id_solicitante
-                      where status ='SOLICITADA'
-            order by id_solicitud desc
+                LEFT JOIN Archivos ON Archivos.id_archivo = Solicitudes.id_archivo
+                LEFT JOIN Usuarios ON Usuarios.id_usuario = Solicitudes.id_solicitante
+            WHERE status = 'SOLICITADA'
+            ORDER BY id_solicitud DESC;
         `;
 
         const result = await pool.request().query(query);

@@ -1,4 +1,4 @@
-import { pool } from "../../../config/db.js";
+import { pool, connectDB} from "../../../config/db.js";
 import sql from 'mssql';
 import { resetearBaneo } from "./resetearBaneo.js";
 import { verificarBaneo } from "../../Verificador/ValidacionesLogin/verificarBaneo.js";
@@ -58,5 +58,30 @@ export const validacionUsuario = async (Email, PassWord) => {
             throw error;
         }
         throw new InternalServerError
+    }
+};
+
+
+export const ObtenerEmailPorIdUser = async (userID) => {
+    try {
+        await connectDB();
+
+        const result = await pool.request()
+            .input("userID", sql.Int, userID)
+            .query(`
+                SELECT [email]
+                FROM [BibliotecaMLC].[dbo].[Usuarios]
+                WHERE [id_usuario] = @userID
+            `);
+
+        if (result.recordset.length === 0) {
+            console.warn(`No se encontró un usuario con el ID ${userID}`);
+            return null;
+        }
+
+        return result.recordset[0].email;
+    } catch (error) {
+        console.error("Error al obtener el email del usuario:", error);
+        throw new Error("Error al obtener el email del usuario");
     }
 };

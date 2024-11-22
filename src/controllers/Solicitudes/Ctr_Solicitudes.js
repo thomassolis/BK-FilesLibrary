@@ -3,6 +3,8 @@ import { obtener_Drive_ID_BY_Solicitud, verificar_Permiso_Para_Archivo } from ".
 import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Historial_Administrador, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente } from "../../querys/solicitudes/db.solicitudes.js";
 import { OrdenarDatosEntradaAprobacionAdministrador, OrdenarDatosEntradaAprobacionGerente, OrdernarDataSalidadPentiendesAdministrador, OrdernarDataSalidadPentiendesGerente, ordernarDatosDeEntrada } from "../../Schemas/Datos/dataSolicitud.js";
 import fs from 'fs'
+import { enviarCorreo } from "../Email/EnviadorCorreos.js";
+import { ObtenerEmailPorIdUser } from "../../querys/Login/login.js";
 export const ctr_AgregarNuevaSolicitud = async (req, res) => {
   const rol = req.user.nombre_rol;
   const data = ordernarDatosDeEntrada(req.body, req.user);
@@ -107,54 +109,85 @@ export const ctr_VerSolicitudesPendientesAdministrador= async (req, res) => {
     }
   };
   
-
-export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
+  export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
     try {
         const rol = req.user.nombre_rol;
+
         if (rol !== 'ADM')
         {
-            return res.status(403).json({success: false, message: 'No tienes permiso para realizar esta acción. Solo un Administrador puede aprobar o rechazar solicitudes.'});
+            return res.status(403).json({ success: false, message: 'No tienes permiso para realizar esta acción. Solo un Administrador puede aprobar o rechazar solicitudes.', });
         }
-  
+
         const Data = OrdenarDatosEntradaAprobacionAdministrador(req.body, req.user.id_usuario);
-
         const resultado = await db_Actualizar_Solicitud_Pendientes_Administrador(Data);
-  
-        if (resultado.success) {
-            if (Data.FueAprobado)
-            {
-                const Drive_ID_Email = await  obtener_Drive_ID_BY_Solicitud(Data.IdSolicitud)
-                const tempFilePath = await ObtenerArchivoDesdeDrive(Drive_ID_Email.driveID);
 
-                if (tempFilePath) {
-                    console.log(tempFilePath)
-                   // fs.unlinkSync(tempFilePath);
-                } else {
-                    console.log('NO EXISTE EL ARCHIVO');
+        if (resultado.success) {
+            if (Data.FueAprobado) {
+                const Drive_ID_Email = await obtener_Drive_ID_BY_Solicitud(Data.IdSolicitud);
+
+                if (!Drive_ID_Email || !Drive_ID_Email.driveID)
+                {
+                    return res.status(404).json({ success: false, message: 'No se pudo encontrar el archivo asociado a la solicitud aprobada.', });
                 }
 
-              return res.status(200).json({ success: true, message: 'Solicitud aprobada exitosamente. Ha sido enviada a los administradores.' });
-            } 
-            else
-            {
-              return res.status(200).json({ success: true, message: 'Solicitud rechazada. No se enviará a los administradores.' });  
+                const tempFilePath = await ObtenerArchivoDesdeDrive(Drive_ID_Email.driveID);
+
+                if (!tempFilePath) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error al descargar el archivo desde Drive.',
+                    });
+                }
+
+                // Obtener el email del solicitante
+                const emailTo = await ObtenerEmailPorIdUser(req.user.id_usuario);
+                if (!emailTo) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'No se pudo obtener el correo electrónico del solicitante.',
+                    });
+                }
+
+                // Enviar el correo con el archivo adjunto
+                const emailResponse = await enviarCorreo({
+                    subject: 'Notificación de Aprobación',
+                    to: "analistadedatos2multimodal@mlc.com.pa",
+                    bcc: 'analistadedatosmultimodal@mlc.com.pa',
+                    fileAttached: tempFilePath,
+                    ComentarioAdmin: Data.ComentarioAdmnistrador ,
+                });
+
+                if (!emailResponse.success) {
+                    return res.status(500).json({
+                        success: false,
+                        message: 'La solicitud fue aprobada, pero ocurrió un error al enviar el correo.',
+                    });
+                }
+
+                fs.unlinkSync(tempFilePath);
+                console.log( `Solicitud aprobada exitosamente. Se ha enviado el archivo al correo ${emailTo}.`)
+                return res.status(200).json({success: true, message: `Solicitud aprobada exitosamente. Se ha enviado el archivo al correo ${emailTo}.`,});
+            } else {
+                return res.status(200).json({
+                    success: true,
+                    message: 'Solicitud rechazada. No se enviará a los administradores.',
+                });
             }
-        } 
-        else
-        {
+        } else {
             console.error('Error al actualizar la solicitud:', resultado.error);
-            return res.status(500).json({ success: false, message: 'Error al procesar la solicitud. Intenta nuevamente.' });
+            return res.status(500).json({
+                success: false,
+                message: 'Error al procesar la solicitud. Intenta nuevamente.',
+            });
         }
-    } 
-    catch (error)
-    {
+    } catch (error) {
         console.error('Error en el proceso de aprobación/rechazo:', error);
         return res.status(500).json({
             success: false,
-            message: 'Error interno del servidor al procesar la solicitud.'
+            message: 'Error interno del servidor al procesar la solicitud.',
         });
     }
-  };
+};
 
 
 

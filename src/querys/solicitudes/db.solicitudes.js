@@ -219,3 +219,50 @@ export const db_Obtener_Historial_Administrador = async () => {
     }
 };
 
+
+export const db_ObtenerCorreoMiGerente = async (UserID)=>
+{
+    try {
+        await connectDB();
+        const query = `
+       SELECT 
+        TOP 1 gerente.email AS EmailGerente
+        FROM 
+            [BibliotecaMLC].[dbo].[Usuarios] operador
+        JOIN 
+            [BibliotecaMLC].[dbo].[Usuarios] gerente
+            ON operador.Departamento = gerente.Departamento
+            AND gerente.id_rol = 'GER'
+        WHERE 
+            operador.id_usuario = @idUsuario;
+                `;
+        const result = await pool.request()
+        .input('idUsuario', sql.VarChar(500), UserID)
+        query(query);
+        return result.recordset[0].EmailGerente;
+    } catch (error) {
+        console.error('Error al ejecutar la consulta:', error);
+        return ""
+    }
+}
+
+
+export const db_ObtenerNombreDeArchivoSegunID = async(idArchivo) =>
+    {
+        try {
+            await connectDB();
+            const query = `
+            SELECT TOP (1)
+                [nombre]
+            FROM [BibliotecaMLC].[dbo].[Archivos]
+            where id_archivo = @idArchivo
+                    `;
+            const result = await pool.request()
+            .input('idArchivo', sql.Int, idArchivo)
+            query(query);
+            return result.recordset[0].nombre;
+        } catch (error) {
+            console.error('Error al ejecutar la consulta:', error);
+            return "Archivo No encontrado"
+        }
+    }

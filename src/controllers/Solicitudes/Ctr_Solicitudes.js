@@ -1,22 +1,34 @@
 import { ObtenerArchivoDesdeDrive } from "../../Drive/driveService.js";
 import { obtener_Drive_ID_BY_Solicitud, verificar_Permiso_Para_Archivo } from "../../querys/Files/db_files.js";
-import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Historial_Administrador, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente } from "../../querys/solicitudes/db.solicitudes.js";
+import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Historial_Administrador, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente, db_ObtenerCorreoMiGerente, db_ObtenerNombreDeArchivoSegunID } from "../../querys/solicitudes/db.solicitudes.js";
 import { OrdenarDatosEntradaAprobacionAdministrador, OrdenarDatosEntradaAprobacionGerente, OrdernarDataSalidadPentiendesAdministrador, OrdernarDataSalidadPentiendesGerente, ordernarDatosDeEntrada } from "../../Schemas/Datos/dataSolicitud.js";
 import fs from 'fs'
-import { enviarCorreo } from "../Email/EnviadorCorreos.js";
+import { enviarCorreo, enviarNotificacionGerente } from "../Email/EnviadorCorreos.js";
 import { ObtenerEmailPorIdUser } from "../../querys/Login/login.js";
+
+
 export const ctr_AgregarNuevaSolicitud = async (req, res) => {
   const rol = req.user.nombre_rol;
   const data = ordernarDatosDeEntrada(req.body, req.user);
   const ArchivosPermitidos = await verificar_Permiso_Para_Archivo(rol, data.ID_Archivo);
-
+ const LinkPortal = "https://netserpro.com:4303/"
   if (!ArchivosPermitidos || ArchivosPermitidos.length === 0) {
       return res.json({ success: false, message: 'Permiso denegado para el archivo.' });
   }
 
   try {
       const resultadoInsercion = await db_Insertar_Solicitud_Nueva(data);
-      return res.json({ success: true, data: resultadoInsercion });
+      if(rol==='OPE' && resultadoInsercion)
+        {
+            const MailMiGerente = await db_ObtenerCorreoMiGerente(req.user.id_usuario)
+            const NombreArchivo = await db_ObtenerNombreDeArchivoSegunID(data.ID_Archivo)
+            await enviarNotificacionGerente(MailMiGerente, req.user.nombre, NombreArchivo )
+        }
+        else if(rol==='GER' && resultadoInsercion)
+        {
+            await enviarNotificacionGerente()
+        }
+        return res.json({ success: true, data: resultadoInsercion });
   } catch (error) {
       console.error('Error al insertar nueva solicitud:', error);
       return res.status(500).json({ success: false, message: 'Error al insertar la solicitud.' });

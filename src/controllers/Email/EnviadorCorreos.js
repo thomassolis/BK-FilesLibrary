@@ -57,3 +57,10 @@ export const enviarCorreo = async ({ subject, to, bcc, fileAttached, ComentarioA
         return { success: false, error: error.message };
     }
 };
+
+
+
+export const enviarNotificacionGerente = async ({}) =>
+{
+    
+}

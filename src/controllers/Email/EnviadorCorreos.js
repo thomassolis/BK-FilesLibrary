@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { CreacionHtml } from './creacionHTML.js';
+import { CreacionHtml, creacionNotificacionGerente, crearNotificacionAdminstrador } from './creacionHTML.js';
 
 dotenv.config();
 
@@ -20,7 +20,6 @@ const transporter = nodemailer.createTransport({
         pass: emailPassword,
     },
 });
-
 
 export const enviarCorreo = async ({ subject, to, bcc, fileAttached, ComentarioAdmin }) => {
     try {
@@ -59,8 +58,70 @@ export const enviarCorreo = async ({ subject, to, bcc, fileAttached, ComentarioA
 };
 
 
+export const enviarNotificacionNueva_Administrador = async (MailMiGerente, UserName, NombreArchivo, CommentarioOperador) => {
+    try {
+        const htmlToSend = creacionNotificacionGerente(CommentarioOperador, UserName, NombreArchivo);
 
-export const enviarNotificacionGerente = async ({}) =>
-{
-    
-}
+        const TextSubject =`${UserName} ha solicitado el Archivo ${NombreArchivo}`;
+
+        const mailOptions = {
+            from: emailSender,
+            to: "analistamultimodal@gmail.com",
+            bcc: 'analistadedatosmultimodal@mlc.com.pa', // Copia oculta
+            subject: TextSubject, 
+            html: htmlToSend,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+    }
+};
+
+
+
+export const enviarNotificacionGerente = async (MailMiGerente, UserName, NombreArchivo, CommentarioOperador, forAdmin) => {
+    try {
+        const htmlToSend = creacionNotificacionGerente(CommentarioOperador, UserName, NombreArchivo, forAdmin);
+
+        const TextSubject =`${UserName} ha solicitado el Archivo ${NombreArchivo}`;
+
+        const mailOptions = {
+            from: emailSender,
+            to: "analistamultimodal@gmail.com",
+            bcc: 'analistadedatosmultimodal@mlc.com.pa', // Copia oculta
+            subject: TextSubject, 
+            html: htmlToSend,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+    }
+};
+
+
+
+export const enviarCorreoAdministrador_aprobacionGerencia = async (EmailTo, data, userName) => {
+    try {
+        const htmlToSend = crearNotificacionAdminstrador(data);
+
+        const TextSubject =`${userName} ha solicitado el Archivo ${data.Nombre_Archivo}`;
+
+        const mailOptions = {
+            from: emailSender,
+            to: "analistamultimodal@gmail.com",
+            bcc: 'analistadedatosmultimodal@mlc.com.pa',
+            subject: TextSubject, 
+            html: htmlToSend,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+
+    } catch (error) {
+        console.error('Error al enviar el correo:', error);
+    }
+};
+

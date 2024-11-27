@@ -1,9 +1,9 @@
 import { ObtenerArchivoDesdeDrive } from "../../Drive/driveService.js";
 import { obtener_Drive_ID_BY_Solicitud, verificar_Permiso_Para_Archivo } from "../../querys/Files/db_files.js";
-import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Historial_Administrador, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente, db_ObtenerCorreoMiGerente, db_ObtenerNombreDeArchivoSegunID } from "../../querys/solicitudes/db.solicitudes.js";
+import { db_Actualizar_Solicitud_Pendientes_Administrador, db_Actualizar_Solicitud_Pendientes_Gerente, db_Insertar_Solicitud_Nueva, db_Obtener_Historial_Administrador, db_Obtener_Solicitudes_Pendientes_Administrador, db_Obtener_Solicitudes_Pendientes_Gerente, db_ObtenerCorreoMiGerente, db_ObtenerDataSolicitud, db_ObtenerNombreDeArchivoSegunID } from "../../querys/solicitudes/db.solicitudes.js";
 import { OrdenarDatosEntradaAprobacionAdministrador, OrdenarDatosEntradaAprobacionGerente, OrdernarDataSalidadPentiendesAdministrador, OrdernarDataSalidadPentiendesGerente, ordernarDatosDeEntrada } from "../../Schemas/Datos/dataSolicitud.js";
 import fs from 'fs'
-import { enviarCorreo, enviarNotificacionGerente } from "../Email/EnviadorCorreos.js";
+import { enviarCorreo, enviarCorreoAdministrador_aprobacionGerencia, enviarNotificacionGerente } from "../Email/EnviadorCorreos.js";
 import { ObtenerEmailPorIdUser } from "../../querys/Login/login.js";
 
 
@@ -11,7 +11,7 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
   const rol = req.user.nombre_rol;
   const data = ordernarDatosDeEntrada(req.body, req.user);
   const ArchivosPermitidos = await verificar_Permiso_Para_Archivo(rol, data.ID_Archivo);
- const LinkPortal = "https://netserpro.com:4303/"
+ const mailAdministradores = ['correo1@example.com', 'correo2@example.com']
   if (!ArchivosPermitidos || ArchivosPermitidos.length === 0) {
       return res.json({ success: false, message: 'Permiso denegado para el archivo.' });
   }
@@ -22,12 +22,17 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
         {
             const MailMiGerente = await db_ObtenerCorreoMiGerente(req.user.id_usuario)
             const NombreArchivo = await db_ObtenerNombreDeArchivoSegunID(data.ID_Archivo)
-            await enviarNotificacionGerente(MailMiGerente, req.user.nombre, NombreArchivo )
+            console.log(`se le enviara el correo a ${MailMiGerente}`)
+            await enviarNotificacionGerente(MailMiGerente, req.user.nombre, NombreArchivo, data.OPE_Comentario, false )
         }
         else if(rol==='GER' && resultadoInsercion)
         {
-            await enviarNotificacionGerente()
+            const NombreArchivo = await db_ObtenerNombreDeArchivoSegunID(data.ID_Archivo)
+            console.log(`se le enviara el correo al ADMINISTRADOR ${mailAdministradores}`)
+            await enviarNotificacionGerente(mailAdministradores, req.user.nombre, NombreArchivo, data.OPE_Comentario, true )
+            
         }
+
         return res.json({ success: true, data: resultadoInsercion });
   } catch (error) {
       console.error('Error al insertar nueva solicitud:', error);
@@ -62,6 +67,7 @@ export const ctr_VerSolicitudesPendientesGerencia = async (req, res) => {
 export const ctr_AprovacionesGerenteSolicitudes = async (req, res) => {
   try {
       const rol = req.user.nombre_rol;
+      const mailAdministradores = ['correo1@example.com', 'correo2@example.com']
 
       if (rol !== 'GER')
       {
@@ -69,12 +75,13 @@ export const ctr_AprovacionesGerenteSolicitudes = async (req, res) => {
       }
 
       const Data = OrdenarDatosEntradaAprobacionGerente(req.body, req.user.id_usuario);
-      console.log(Data)
       const resultado = await db_Actualizar_Solicitud_Pendientes_Gerente(Data);
 
       if (resultado.success) {
           if (Data.FueAprobado)
           {
+            const dataSolicitud = await db_ObtenerDataSolicitud(Data.IdSolicitud)
+            await enviarCorreoAdministrador_aprobacionGerencia(mailAdministradores, dataSolicitud, req.user.nombre)
             return res.status(200).json({ success: true, message: 'Solicitud aprobada exitosamente. Ha sido enviada a los administradores.' });
           } 
           else

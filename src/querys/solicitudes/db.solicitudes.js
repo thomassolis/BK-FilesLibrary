@@ -237,8 +237,8 @@ export const db_ObtenerCorreoMiGerente = async (UserID)=>
             operador.id_usuario = @idUsuario;
                 `;
         const result = await pool.request()
-        .input('idUsuario', sql.VarChar(500), UserID)
-        query(query);
+        .input('idUsuario', sql.Int, UserID)
+        .query(query);
         return result.recordset[0].EmailGerente;
     } catch (error) {
         console.error('Error al ejecutar la consulta:', error);
@@ -259,10 +259,47 @@ export const db_ObtenerNombreDeArchivoSegunID = async(idArchivo) =>
                     `;
             const result = await pool.request()
             .input('idArchivo', sql.Int, idArchivo)
-            query(query);
+            .query(query);
             return result.recordset[0].nombre;
         } catch (error) {
             console.error('Error al ejecutar la consulta:', error);
             return "Archivo No encontrado"
         }
     }
+
+
+ 
+export const db_ObtenerDataSolicitud = async (idSolicitud) =>
+{
+    try {
+        await connectDB();
+        const query = `
+        SELECT
+
+            Solicitante.nombre AS 'Nombre_de_solicitante',
+			Archivos.nombre as 'Nombre_Archivo',
+            Solicitudes.motivo_solicitud AS 'motivo_de_la_solicitud',
+            Solicitudes.fecha_solicitud AS 'fecha_solicitud',
+            Gerente.nombre AS 'Gerente_que_aprobo_solicitud',
+            Solicitudes.comentarioGerente AS 'Comentario_gerente',
+            Solicitudes.fecha_aprobacion_gerencial AS 'fecha_aprobacion_gerente'
+        FROM 
+            Solicitudes
+            INNER JOIN Archivos ON Archivos.id_archivo = Solicitudes.id_archivo
+            INNER JOIN Usuarios AS Solicitante ON Solicitante.id_usuario = Solicitudes.id_solicitante
+            LEFT JOIN Usuarios AS Gerente ON Gerente.id_usuario = Solicitudes.id_gerente
+            LEFT JOIN Usuarios AS Administrador ON Administrador.id_usuario = Solicitudes.id_administrador
+            INNER JOIN Roles ON Roles.id_rol = Solicitante.id_rol
+		where Solicitudes.id_solicitud =@idSolicitud
+                `;
+        const result = await pool.request()
+        .input('idSolicitud', sql.Int, idSolicitud)
+        .query(query);
+        return result.recordset[0];
+    } catch (error) {
+        console.error('Error al ejecutar la consulta:', error);
+        return {}
+    }
+
+
+}

@@ -3,7 +3,7 @@ import speakeasy from 'speakeasy';
 
 export const generateQRCode = async (secret) => {
     const otpauth_url = speakeasy.otpauthURL({
-        secret: secret,   // Pasar el secreto en ASCII aquí
+        secret: secret,
         label: 'BibliotecaMLC', 
         issuer: 'BibliotecaMLC',
         encoding: 'ascii'

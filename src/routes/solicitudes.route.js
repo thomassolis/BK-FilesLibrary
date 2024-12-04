@@ -16,7 +16,7 @@ router.get('/ver/pendientes/gerencia', verificarToken, is2FAuthenticate, ctr_Ver
 router.post('/aprobacion/solicitud/gerente', verificarToken, is2FAuthenticate, ctr_AprovacionesGerenteSolicitudes)
 
 
-/****************************          ADMINISTRADOR           ************************************************** */
+/****************************          ADMINISTRADOR               ************************************************** */
 router.get('/ver/pendientes/administrador', verificarToken, is2FAuthenticate, ctr_VerSolicitudesPendientesAdministrador); 
 
 router.post('/aprobacion/solicitud/administrador', verificarToken, is2FAuthenticate, ctr_AprovacionesAdministradorSolicitudes)

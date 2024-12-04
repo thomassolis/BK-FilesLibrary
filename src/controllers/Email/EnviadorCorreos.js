@@ -57,7 +57,6 @@ export const enviarCorreo = async ({ subject, to, bcc, fileAttached, ComentarioA
     }
 };
 
-
 export const enviarNotificacionNueva_Administrador = async (MailMiGerente, UserName, NombreArchivo, CommentarioOperador) => {
     try {
         const htmlToSend = creacionNotificacionGerente(CommentarioOperador, UserName, NombreArchivo);
@@ -79,8 +78,6 @@ export const enviarNotificacionNueva_Administrador = async (MailMiGerente, UserN
     }
 };
 
-
-
 export const enviarNotificacionGerente = async (MailMiGerente, UserName, NombreArchivo, CommentarioOperador, forAdmin) => {
     try {
         const htmlToSend = creacionNotificacionGerente(CommentarioOperador, UserName, NombreArchivo, forAdmin);
@@ -95,14 +92,10 @@ export const enviarNotificacionGerente = async (MailMiGerente, UserName, NombreA
             html: htmlToSend,
         };
 
-        const info = await transporter.sendMail(mailOptions);
-
     } catch (error) {
         console.error('Error al enviar el correo:', error);
     }
 };
-
-
 
 export const enviarCorreoAdministrador_aprobacionGerencia = async (EmailTo, data, userName) => {
     try {
@@ -117,9 +110,6 @@ export const enviarCorreoAdministrador_aprobacionGerencia = async (EmailTo, data
             subject: TextSubject, 
             html: htmlToSend,
         };
-
-        const info = await transporter.sendMail(mailOptions);
-
     } catch (error) {
         console.error('Error al enviar el correo:', error);
     }

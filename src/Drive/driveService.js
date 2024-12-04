@@ -2,13 +2,26 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const authenticate = () => {
-    const keyFilePath = path.join(process.cwd(), 'src/Drive', 'biblioteca-441114-764b4d111738.json');
     const auth = new google.auth.GoogleAuth({
-        keyFile: keyFilePath,
+        credentials: {
+            type: process.env.GOOGLE_TYPE,
+            project_id: process.env.GOOGLE_PROJECT_ID,
+            private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+            private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Convertir saltos de línea
+            client_email: process.env.GOOGLE_CLIENT_EMAIL,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            auth_uri: process.env.GOOGLE_AUTH_URI,
+            token_uri: process.env.GOOGLE_TOKEN_URI,
+            auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_CERT_URL,
+            client_x509_cert_url: process.env.GOOGLE_CLIENT_CERT_URL,
+        },
         scopes: ['https://www.googleapis.com/auth/drive'],
     });
+
     return auth;
 };
 
@@ -89,6 +102,7 @@ export const ObtenerArchivoDesdeDrive = async (Drive_Id) => {
                 })
                 .pipe(dest);
         });
+        
 
         return tempFilePath; // Ruta al archivo descargado con el nombre modificado
 
@@ -123,3 +137,32 @@ export const listNonFolderFilesInDrive = async () => {
         return [];
     }
 };
+
+
+
+export const ObtenerLinkArchivoDrive = async (Drive_Id) => {
+    const auth = authenticate();
+    const drive = google.drive({ version: 'v3', auth });
+
+    try {
+        // Verifica si el archivo existe y obtén su ID
+        const file = await drive.files.get({
+            fileId: Drive_Id,
+            fields: 'id', // Solo necesitamos el ID aquí
+        });
+
+        const fileId = file.data.id;
+
+        if (!fileId) {
+            throw new Error('No se encontró el archivo.');
+        }
+
+        // Generar enlace de previsualización
+        const embedLink = `https://drive.google.com/file/d/${fileId}/preview`;
+        return embedLink;
+    } catch (error) {
+        console.error('Error al obtener el enlace embebible:', error);
+        throw error;
+    }
+};
+

@@ -1,5 +1,3 @@
-
-
 const generarSaludoSegunHora = () => {
     const hora = new Date().getHours(); // Obtiene la hora actual
     if (hora >= 6 && hora < 12) {
@@ -11,11 +9,9 @@ const generarSaludoSegunHora = () => {
     }
 };
 
-
 String.prototype.toUpperCaseSafe = function () {
     return this ? this.toUpperCase() : '';
 };
-
 
 export const CreacionHtml= (comentarioGerente) =>
 {
@@ -200,7 +196,6 @@ export const CreacionHtml= (comentarioGerente) =>
     return hmltContent
 }
 
-
 export const creacionNotificacionGerente = (ComentariOperador, NombreSolicitante, NombreArchivo, forAdmin) =>
 {    
     const SaludoInicial = generarSaludoSegunHora();
@@ -376,7 +371,6 @@ export const creacionNotificacionGerente = (ComentariOperador, NombreSolicitante
     `
 
 }
-
 
 export const crearNotificacionAdminstrador = (data)=>
     {
@@ -566,4 +560,4 @@ export const crearNotificacionAdminstrador = (data)=>
 
 </html>
         `
-    }
+}

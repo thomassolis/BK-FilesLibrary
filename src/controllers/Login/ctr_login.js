@@ -2,12 +2,6 @@ import CustomError from "../../errors/CustomErros.js";
 import { UserBannedError } from "../../errors/UserBannedError.js";
 import { validacionUsuario } from "../../querys/Login/login.js";
 import { generateJWT } from "../jwt/loginToken.js";
-import { fileURLToPath } from 'url';
-import path from "path";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
 import { verifyTOTP } from "../2FA/verificar2FA.js";
 
 
@@ -47,7 +41,6 @@ export const controladorRutaAuthenticationPost = async (req, res) => {
     try {
         const secretByUser = "?>hBo2[wU/ud59RMweyK";
         const isCodeValid = verifyTOTP(secretByUser, authentication);
-        console.log(isCodeValid)
         if (isCodeValid)
         {
             const token = await generateJWT(req.user, true);

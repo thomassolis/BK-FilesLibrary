@@ -32,15 +32,15 @@ export const db_Obtener_Archivos_Permitidos_Por_Usuario = async (rol) => {
     }
 };
 
-export const db_Insertar_Solicitud_Nueva = async (data) => {    
+export const db_Insertar_Solicitud_Nueva = async (data) => {
     try {
-        await connectDB()
+        await connectDB();
         const query = `
             INSERT INTO Solicitudes (Fecha_Solicitud, motivo_solicitud, comentarioGerente, aprobacionGerencia, id_archivo, id_solicitante, id_gerente, status)
+            OUTPUT INSERTED.id_solicitud -- Captura el ID generado automáticamente
             VALUES (@Fecha_Solicitud, @OPE_Comentario, @GEN_Comentario, @GEN_Aproved, @ID_Archivo, @OPE_UserID, @GEN_UserID, @Estado_Solicitud);
         `;
 
-        // Ejecutar el query usando los parámetros proporcionados
         const result = await pool.request()
             .input('Fecha_Solicitud', sql.DateTime, data.Fecha_Solicitud)
             .input('OPE_Comentario', sql.VarChar(sql.MAX), data.OPE_Comentario)
@@ -50,17 +50,16 @@ export const db_Insertar_Solicitud_Nueva = async (data) => {
             .input('OPE_UserID', sql.Int, data.OPE_UserID)
             .input('GEN_UserID', sql.Int, data.GEN_UserID || null)
             .input('Estado_Solicitud', sql.VarChar(sql.MAX), data.Estado_Solicitud || null)
-
             .query(query);
 
-        return true
+        return { success: true, id_solicitud: result.recordset[0].id_solicitud };
     } 
-    catch (error)
-    {
-        console.log('Error al insertar datos en la base de datos:', error.message);
-        return false
+    catch (error) {
+        console.error('Error al insertar datos en la base de datos:', error.message);
+        return { success: false, error: error.message };
     }
 };
+
 
 
 export const db_Obtener_Solicitudes_Pendientes_Gerente = async() =>

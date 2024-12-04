@@ -9,12 +9,12 @@ const dbsetting_Mlc = {
     server: process.env.SERVER,
     database: process.env.DB,
     options: {
-        encrypt: false, // Dependiendo de tu entorno, podrías necesitar activar esto
+        encrypt: false,
       },
 };
 
 const pool = new sql.ConnectionPool(dbsetting_Mlc);
-const poolConnect = pool.connect(); // Esto inicia la conexión al momento de cargar el módulo
+const poolConnect = pool.connect();
 
 const connectDB = async () => {
     try {
@@ -28,7 +28,6 @@ const connectDB = async () => {
 const closeDB = async () => {
     try {
         await pool.close();
-        console.log('Conexión a la base de datos cerrada');
     } catch (error) {
         console.error('Error al cerrar la conexión a la base de datos:', error.message);
     }

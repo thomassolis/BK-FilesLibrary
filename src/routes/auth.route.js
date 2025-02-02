@@ -2,7 +2,6 @@ import { controladorRutaLoginPost, controladorRutaAuthenticationPost, controlado
 import { Router } from 'express';
 import verificarToken from '../controllers/jwt/loginToken.js'
 import { is2FAuthenticate } from '../controllers/2FA/verificar2FA.js';
-
 const router = Router();
 
 router.post('/login', controladorRutaLoginPost);

@@ -2,7 +2,7 @@ import { pool, connectDB} from "../../../config/db.js";
 import sql from 'mssql';
 import { resetearBaneo } from "./resetearBaneo.js";
 import { verificarBaneo } from "../../Verificador/ValidacionesLogin/verificarBaneo.js";
-import { verificarContraseña } from "../../Verificador/ValidacionesLogin/verificarContraseña.js";
+import { verificarContraseña } from "../../Verificador/ValidacionesLogin/verificarContrasena.js";
 import { InvalidCredentialsError } from "../../errors/InvalidCredentialserror.js";
 import CustomError from "../../errors/CustomErros.js";
 import { InternalServerError } from "../../errors/serverErrors.js";

@@ -3,8 +3,9 @@ import { UserBannedError } from "../../errors/UserBannedError.js";
 import { validacionUsuario } from "../../querys/Login/login.js";
 import { generateJWT } from "../jwt/loginToken.js";
 import { verifyTOTP } from "../2FA/verificar2FA.js";
-
-
+import { pool } from "../../../config/db.js";
+import  sql from "mssql";
+import { secretVerification } from "../../querys/users/db_usuarios.js";
 export const controladorRutaLoginPost = async (req, res) => {
     const { Email, Password } = req.body;
     try
@@ -37,26 +38,26 @@ export const controladorRutaLoginPost = async (req, res) => {
 
 
 export const controladorRutaAuthenticationPost = async (req, res) => {
-    const { authentication } = req.body;
+    const { authentication, userEmail  } = req.body;  // Asegúrate de pasar el email para buscar el secreto del usuario
+
     try {
-        const secretByUser = "?>hBo2[wU/ud59RMweyK";
-        const isCodeValid = verifyTOTP(secretByUser, authentication);
-        if (isCodeValid)
-        {
+        const result = await secretVerification(userEmail)
+        const secretByUser = result.recordset[0].secret;  // Obtener el secreto desde la base de datos
+        const isCodeValid = verifyTOTP(secretByUser, authentication);  // Verificar el código con el secreto del usuario
+
+        if (isCodeValid) {
             const token = await generateJWT(req.user, true);
             res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'strict' });
-            return res.status(200).json({ success: true, message: "Código 2FA válido", data:req.user});
+            return res.status(200).json({ success: true, message: "Código 2FA válido", data: req.user });
+        } else {
+            return res.status(400).json({ success: false, message: "Código 2FA inválido" });
         }
-        else
-        {
-            return res.status(401).json({ success: false, message: "Código 2FA inválido" });
-        }
-    } 
-    catch (error) {
-        console.log(error)
+    } catch (error) {
+        console.log(error);
         return res.status(401).json({ success: false, message: "Código 2FA inválido por error" });
     }
 };
+
 
 export const controladorRutaLogout = (req, res) => {
     try {

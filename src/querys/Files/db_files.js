@@ -25,10 +25,10 @@ export const db_Obtener_Archivos_Permitidos_Por_Usuario = async (rol) => {
             .input('id_rol', sql.VarChar, rol)
             .query(query);
 
-       return result.recordset
+       return result.recordset;
     } catch (error) {
         console.error('Error al obtener archivos permitidos:', error.message);
-       return {}
+        throw new Error(`Error al obtener archivos permitidos: ${error.message}`);
     }
 };
 
@@ -54,10 +54,10 @@ export const verificar_Permiso_Para_Archivo = async (rol, id_archivo) => {
             .input('rol', sql.VarChar, rol)
             .input('id_archivo', sql.Int, id_archivo)
             .query(query);
-       return result.recordset
+       return result.recordset;
     } catch (error) {
         console.error('Error al obtener archivos permitidos:', error.message);
-       return {}
+        throw new Error(`Error al obtener archivos permitidos: ${error.message}`);
     }
 };
 

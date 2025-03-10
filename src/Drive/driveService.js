@@ -60,9 +60,8 @@ const listFolderContentsRecursively = async (drive, folderId, allowedDriveIDs, i
 export const listFilesInDrive = async (DriveIDs) => {
     const auth = authenticate();
     const drive = google.drive({ version: 'v3', auth });
-    const mainFolderId = '1sF7TjGM_UTN0XnHsv4kECpqYdD26I3lf';
+    const mainFolderId = '1DPXQBbVtGbpD3nnKS8CE35G5PCWfKxzV';
     const driveStructure = await listFolderContentsRecursively(drive, mainFolderId, DriveIDs, true);
-
     return driveStructure;
 };
 
@@ -130,7 +129,7 @@ export const listNonFolderFilesInDrive = async () => {
             type: file.mimeType,
         }));
 
-        console.log(nonFolderFiles); // Opcional: muestra los archivos en la consola
+        //console.log(nonFolderFiles); // Opcional: muestra los archivos en la consola
         return nonFolderFiles;
     } catch (error) {
         console.error('Error al listar archivos no carpeta:', error.message);
@@ -142,27 +141,67 @@ export const listNonFolderFilesInDrive = async () => {
 
 export const ObtenerLinkArchivoDrive = async (Drive_Id) => {
     const auth = authenticate();
-    const drive = google.drive({ version: 'v3', auth });
+    const drive = google.drive({ version: "v3", auth });
 
     try {
-        // Verifica si el archivo existe y obtén su ID
-        const file = await drive.files.get({
+        // 🔹 Crear permiso temporal (anyone can read)
+        const permiso = await drive.permissions.create({
             fileId: Drive_Id,
-            fields: 'id', // Solo necesitamos el ID aquí
+            requestBody: {
+                role: "reader",
+                type: "anyone", // Permite acceso público
+            },
         });
 
-        const fileId = file.data.id;
+        setTimeout(async () => {
+            try {
+                await drive.permissions.delete({
+                    fileId: Drive_Id,
+                    permissionId: permiso.data.id, // Eliminar el permiso creado
+                });
+                console.log(`⏳ Permiso eliminado para el archivo ${Drive_Id}`);
+            } catch (error) {
+                console.error("❌ Error al eliminar el permiso:", error.message);
+            }
+        }, 5 * 60 * 1000); 
+        return `https://drive.google.com/file/d/${Drive_Id}/preview`;
 
-        if (!fileId) {
-            throw new Error('No se encontró el archivo.');
-        }
-
-        // Generar enlace de previsualización
-        const embedLink = `https://drive.google.com/file/d/${fileId}/preview`;
-        return embedLink;
     } catch (error) {
-        console.error('Error al obtener el enlace embebible:', error);
+        console.error("❌ Error al hacer público el archivo temporalmente:", error);
         throw error;
     }
 };
 
+
+
+/*
+
+export const ObtenerTodosLosArchivosDesdeDrive = async (carpetaPadreId) => {
+    const auth = authenticate(); // Autenticación en Google Drive
+    const drive = google.drive({ version: 'v3', auth });
+
+    try {
+        const response = await drive.files.list({
+            q: `'${carpetaPadreId}' in parents and trashed=false`,
+            pageSize: 1000, // Número de archivos por página (máximo recomendado)
+            fields: 'files(id, name, mimeType, size, modifiedTime)', // Campos que queremos recuperar
+        });
+
+        const archivos = response.data.files;
+        console.log(archivos)
+
+        if (!archivos.length) {
+            console.log('No se encontraron archivos en Google Drive.');
+            return [];
+        }
+
+        console.log(`📂 Se encontraron ${archivos.length} archivos en Drive.`);
+        return archivos; // Retorna la lista de archivos con su ID, nombre y tipo
+
+    } catch (error) {
+        console.error('⚠️ Error al obtener los archivos desde Drive:', error.message);
+        return [];
+    }
+};
+
+await ObtenerTodosLosArchivosDesdeDrive('1IjpYoGj-py_uyOpJjWuMWuYh1YIjA-wE')*/

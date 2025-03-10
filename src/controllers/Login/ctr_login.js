@@ -41,8 +41,12 @@ export const controladorRutaAuthenticationPost = async (req, res) => {
     const { authentication, userEmail  } = req.body;  // Asegúrate de pasar el email para buscar el secreto del usuario
 
     try {
-        const result = await secretVerification(userEmail)
-        const secretByUser = result.recordset[0].secret;  // Obtener el secreto desde la base de datos
+        const secretByUser = await secretVerification(userEmail); // Obtener el secreto desde la base de datos
+
+        if (!secretByUser) {
+            console.error('Error al obtener el secretVerification');
+            return res.status(404).json({ success: false, message: "Error al obtener la verificación" });
+        } 
         const isCodeValid = verifyTOTP(secretByUser, authentication);  // Verificar el código con el secreto del usuario
 
         if (isCodeValid) {

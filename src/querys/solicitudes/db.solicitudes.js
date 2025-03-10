@@ -150,6 +150,7 @@ export const db_Obtener_Solicitudes_Pendientes_Administrador = async() =>
         }
         catch (error)
         {
+            console.error(`Error al obtener las solictudes pendientes del Administrador, ${error.message}`);
             return {}
         }
     }

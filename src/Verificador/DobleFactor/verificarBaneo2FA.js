@@ -11,7 +11,8 @@ export const verificarBaneo2FA = async (user) => {
 };
 
 const resetearBaneo2FA = async (userId) => {
-    await pool.request()
+    try {
+        await pool.request()
         .input("userId", sql.Int, userId)
         .query(`UPDATE [BibliotecaMLC].[dbo].[Usuarios]
                 SET 
@@ -19,4 +20,8 @@ const resetearBaneo2FA = async (userId) => {
                     isBaned_2fa = 0,
                     fecha_baneo_2fa = NULL
                 WHERE id_usuario = @userId`);
+    } catch (error) {
+        console.error(`Error al resetaer le baneo 2FA, ${error.message}`);
+        throw new Error('Error al resetaer le baneo 2FA');        
+    }    
 };

@@ -38,7 +38,7 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
     rol,
     data.ID_Archivo
   );
-  const mailAdministradores = ["correo1@example.com", "correo2@example.com"];
+  const mailAdministradores = ["analistamlc3@gmail.com", "analistadedatosmultimodal@mlc.com.pa"];
   if (!ArchivosPermitidos || ArchivosPermitidos.length === 0) {
     return res.json({
       success: false,
@@ -48,7 +48,6 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
 
   try {
     const resultadoInsercion = await db_Insertar_Solicitud_Nueva(data);
-
     if (!resultadoInsercion.success) {
       return res
         .status(500)
@@ -75,9 +74,7 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
         motivo_solicitud: data.OPE_Comentario,
       });
     } else if (rol === "GER") {
-      const NombreArchivo = await db_ObtenerNombreDeArchivoSegunID(
-        data.ID_Archivo
-      );
+      const NombreArchivo = await db_ObtenerNombreDeArchivoSegunID(data.ID_Archivo);
       await enviarNotificacionGerente(
         mailAdministradores,
         req.user.nombre,
@@ -344,5 +341,6 @@ export const ctr_ObtenerHistorialAdministrador = async (req, res) => {
     res.json({ success: true, Data: DataHistorial });
   } catch (error) {
     console.log("Error en el ctr_ObtenerHistorialAdministrador: ", error);
+    return res.status(500).json({ success: false, message: "Error al obtener el historial del administrador.", });
   }
 };

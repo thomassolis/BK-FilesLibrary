@@ -72,9 +72,11 @@ export const enviarNotificacionNueva_Administrador = async (MailMiGerente, UserN
         };
 
         const info = await transporter.sendMail(mailOptions);
+        return { success: true, messageId: info.messageId };
 
     } catch (error) {
         console.error('Error al enviar el correo:', error);
+        return { success: false, error: error.message };
     }
 };
 
@@ -86,14 +88,17 @@ export const enviarNotificacionGerente = async (MailMiGerente, UserName, NombreA
 
         const mailOptions = {
             from: emailSender,
-            to: "analistamultimodal@gmail.com",
+            to: MailMiGerente,
             bcc: 'analistadedatosmultimodal@mlc.com.pa', // Copia oculta
             subject: TextSubject, 
             html: htmlToSend,
         };
+        const info = await transporter.sendMail(mailOptions);
+        return { success: true, messageId: info.messageId };
 
     } catch (error) {
         console.error('Error al enviar el correo:', error);
+        return { success: false, error: error.message };
     }
 };
 
@@ -110,8 +115,11 @@ export const enviarCorreoAdministrador_aprobacionGerencia = async (EmailTo, data
             subject: TextSubject, 
             html: htmlToSend,
         };
+        const info = await transporter.sendMail(mailOptions);
+        return { success: true, messageId: info.messageId };
     } catch (error) {
         console.error('Error al enviar el correo:', error);
+        return { success: false, error: error.message };
     }
 };
 

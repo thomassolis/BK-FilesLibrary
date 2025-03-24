@@ -13,7 +13,8 @@ export const incrementarIntentosFallidos = async (idUsuario, intentosActuales) =
         fechaBaneo = construirFechaUTC5(ahora);
     }
 
-    await pool.request()
+    try {
+        await pool.request()
         .input("idUsuario", sql.Int, idUsuario)
         .input("num_intentos", sql.Int, nuevoNumeroIntentos)
         .input("isBaned", sql.Bit, isBaned)
@@ -25,4 +26,8 @@ export const incrementarIntentosFallidos = async (idUsuario, intentosActuales) =
                     [fecha_baneo] = @fecha_baneo
                 WHERE 
                     [id_usuario] = @idUsuario`);
+    } catch (error) {
+        console.error(`Error al actualizar el numero de intentos fallidos, ${error.message}`);
+        throw new Error('Error al actualizar el numero de intentos fallidos');        
+    }    
 };

@@ -19,8 +19,13 @@ export const generateQRCode = async (nombre, apellido, secret) => {
 
     // Guardar el QR con un nombre único
     const filePath = `./qrcodes/${nombreArchivoQR}`;
-    await qrcode.toFile(filePath, otpauth_url);
+    try {
+        await qrcode.toFile(filePath, otpauth_url);
 
-    return filePath;
+        return filePath;
+    } catch (error) {
+        console.error('Error al general el QR, ', error.message);
+        return null;
+    }    
 };
 

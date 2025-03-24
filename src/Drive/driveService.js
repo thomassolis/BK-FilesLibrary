@@ -60,7 +60,7 @@ const listFolderContentsRecursively = async (drive, folderId, allowedDriveIDs, i
 export const listFilesInDrive = async (DriveIDs) => {
     const auth = authenticate();
     const drive = google.drive({ version: 'v3', auth });
-    const mainFolderId = '1sF7TjGM_UTN0XnHsv4kECpqYdD26I3lf';
+    const mainFolderId = '1DPXQBbVtGbpD3nnKS8CE35G5PCWfKxzV';
     const driveStructure = await listFolderContentsRecursively(drive, mainFolderId, DriveIDs, true);
 
     return driveStructure;

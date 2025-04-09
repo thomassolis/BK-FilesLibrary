@@ -7,12 +7,12 @@ export const controladorcreateNewUser = async(req, res) =>{
     try{
         const {nombre, apellido, departamento, correo, password, rol} = req.body;
 
-        const existEmail = await validarCorreoBD(correo);
+        // const existEmail = await validarCorreoBD(correo);
 
-        //valida que el correo no este registrado en la BD
-        if (existEmail) {
-            return res.json({ success: false, message: 'El correo ingresado se encuentra registrado' })
-        }
+        // //valida que el correo no este registrado en la BD
+        // if (existEmail) {
+        //     return res.json({ success: false, message: 'El correo ingresado se encuentra registrado' })
+        // }
 
          // Generar el hash de la contraseña
          const contraseñaEncriptada = await generarHashContraseña(password);

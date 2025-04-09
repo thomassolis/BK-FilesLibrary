@@ -69,6 +69,7 @@ export const secretVerification = async(userEmail) =>{
 
 //VALIDA QUE EL CORREO NO ESTE REGISTRADO EN LA BASE DE DATOS
 export const validarCorreoBD = async (email) => {
+    console.log(email)
     try {
         const result = await pool.request()
             .input("Email", sql.VarChar, email)

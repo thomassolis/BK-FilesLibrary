@@ -77,7 +77,7 @@ export const validarCorreoBD = async (email) => {
                     SELECT email FROM [BibliotecaMLC].[dbo].[Usuarios] WHERE email = @Email
                 `);
 
-        return result.recordset[0].email;
+        return result.recordset[0];
     } catch (error) {
         console.error('Error al verificar el email, ', error.message);
         throw new Error('Error al validar el correo');

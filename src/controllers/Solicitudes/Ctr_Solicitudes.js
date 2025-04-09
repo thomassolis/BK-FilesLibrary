@@ -295,7 +295,7 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
         const emailResponse = await enviarCorreo({
           subject: "Notificación de Aprobación",
           to: "analistadedatos2multimodal@mlc.com.pa",
-          bcc: "analistadedatosmultimodal@mlc.com.pa",
+          // bcc: "analistadedatosmultimodal@mlc.com.pa",
           fileAttached: tempFilePath,
           ComentarioAdmin: Data.ComentarioAdmnistrador,
         });

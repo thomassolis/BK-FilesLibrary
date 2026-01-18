@@ -1,35 +1,34 @@
-import sql from 'mssql';
-import dotenv from 'dotenv';
+import pkg from "pg";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-const dbsetting_Mlc = {
-    user: process.env.USER,
-    password: process.env.PASS,
-    server: process.env.SERVER,
-    database: process.env.DB,
-    options: {
-        encrypt: false,
-      },
-};
+const { Pool } = pkg;
 
-const pool = new sql.ConnectionPool(dbsetting_Mlc);
-const poolConnect = pool.connect();
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
 const connectDB = async () => {
     try {
-        await poolConnect;
+        const client = await pool.connect();
+        console.log("✅ Connected to PostgreSQL");
+        client.release();
     } catch (error) {
-        console.error('Error al conectar a la base de datos:', error.message);
-        throw new Error('No se pudo conectar a la base de datos');
+        console.error("❌ Error al conectar a la base de datos:", error.message);
+        throw new Error("No se pudo conectar a la base de datos");
     }
 };
 
 const closeDB = async () => {
     try {
-        await pool.close();
+        await pool.end();
+        console.log("🔌 Conexión cerrada");
     } catch (error) {
-        console.error('Error al cerrar la conexión a la base de datos:', error.message);
+        console.error("Error al cerrar la conexión:", error.message);
     }
 };
 

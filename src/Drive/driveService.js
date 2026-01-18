@@ -26,6 +26,10 @@ const authenticate = () => {
 };
 
 const listFolderContentsRecursively = async (drive, folderId, allowedDriveIDs, isRoot = false) => {
+    // console.log('drive>', drive)
+    // console.log('drive>', folderId)
+    // console.log('drive>', allowedDriveIDs)
+    // console.log('drive>', isRoot)
     try {
         const response = await drive.files.list({
             fields: 'files(id, name, mimeType)',
@@ -60,7 +64,7 @@ const listFolderContentsRecursively = async (drive, folderId, allowedDriveIDs, i
 export const listFilesInDrive = async (DriveIDs) => {
     const auth = authenticate();
     const drive = google.drive({ version: 'v3', auth });
-    const mainFolderId = '1DPXQBbVtGbpD3nnKS8CE35G5PCWfKxzV';
+    const mainFolderId = '1DSvJhsEbvZW4AipjsYBQAnUnnU-u07Wa';
     const driveStructure = await listFolderContentsRecursively(drive, mainFolderId, DriveIDs, true);
     return driveStructure;
 };
@@ -140,6 +144,7 @@ export const listNonFolderFilesInDrive = async () => {
 
 
 export const ObtenerLinkArchivoDrive = async (Drive_Id) => {
+    console.log('ObtenerLinkArchivoDrive')
     const auth = authenticate();
     const drive = google.drive({ version: "v3", auth });
 

@@ -32,274 +32,254 @@ export const db_Obtener_Archivos_Permitidos_Por_Usuario = async (rol) => {
     }
 };
 
+// pool = new Pool({ connectionString: ... })
 export const db_Insertar_Solicitud_Nueva = async (data) => {
-    try {
-        await connectDB();
-        const query = `
-            INSERT INTO Solicitudes (Fecha_Solicitud, motivo_solicitud, comentarioGerente, aprobacionGerencia, id_archivo, id_solicitante, id_gerente, status)
-            OUTPUT INSERTED.id_solicitud -- Captura el ID generado automáticamente
-            VALUES (@Fecha_Solicitud, @OPE_Comentario, @GEN_Comentario, @GEN_Aproved, @ID_Archivo, @OPE_UserID, @GEN_UserID, @Estado_Solicitud);
-        `;
+  const query = `
+    INSERT INTO Solicitudes (
+      Fecha_Solicitud,
+      motivo_solicitud,
+      comentarioGerente,
+      aprobacionGerencia,
+      id_archivo,
+      id_solicitante,
+      id_gerente,
+      status
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING id_solicitud;
+  `;
 
-        const result = await pool.request()
-            .input('Fecha_Solicitud', sql.DateTime, data.Fecha_Solicitud)
-            .input('OPE_Comentario', sql.VarChar(sql.MAX), data.OPE_Comentario)
-            .input('GEN_Comentario', sql.VarChar(sql.MAX), data.GEN_Comentario || null)
-            .input('GEN_Aproved', sql.Bit, data.GEN_Aproved)
-            .input('ID_Archivo', sql.Int, data.ID_Archivo)
-            .input('OPE_UserID', sql.Int, data.OPE_UserID)
-            .input('GEN_UserID', sql.Int, data.GEN_UserID || null)
-            .input('Estado_Solicitud', sql.VarChar(sql.MAX), data.Estado_Solicitud || null)
-            .query(query);
+  const values = [
+    data.Fecha_Solicitud,                 // timestamp / timestamptz
+    data.OPE_Comentario,                  // text
+    data.GEN_Comentario ?? null,          // text nullable
+    data.GEN_Aproved,                     // boolean
+    data.ID_Archivo,                      // integer
+    data.OPE_UserID,                      // integer
+    data.GEN_UserID ?? null,              // integer nullable
+    data.Estado_Solicitud ?? null         // text nullable (o cambia a default si quieres)
+  ];
 
-        return { success: true, id_solicitud: result.recordset[0].id_solicitud };
-    } 
-    catch (error) {
-        console.error('Error al insertar datos en la base de datos:', error.message);
-        return { success: false, error: error.message };
-    }
-};
-
-
-
-export const db_Obtener_Solicitudes_Pendientes_Gerente = async() =>
-{
-    try
-    {
-        await connectDB()
-        const query = `
-           SELECT
-                Solicitudes.id_solicitud,
-                Archivos.nombre AS 'Nombre_del_archivo',
-                Usuarios.nombre AS 'Nombre_de_solicitante',
-                Solicitudes.motivo_solicitud AS 'motivo_solicitud'
-            FROM Solicitudes
-                LEFT JOIN Archivos ON Archivos.id_archivo = Solicitudes.id_archivo
-                LEFT JOIN Usuarios ON Usuarios.id_usuario = Solicitudes.id_solicitante
-            WHERE status = 'SOLICITADA'
-            ORDER BY id_solicitud DESC;
-        `;
-
-        const result = await pool.request().query(query);
-        return result.recordset
-    }
-    catch (error)
-    {
-        return {}
-    }
-}
-
-export const db_Actualizar_Solicitud_Pendientes_Gerente = async(data)=>
-{
-    try
-    {
-        await connectDB()
-        const query = `
-        UPDATE [BibliotecaMLC].[dbo].[Solicitudes]
-            SET [comentarioGerente]  = @ComentarioGerente,
-                [aprobacionGerencia] = @FueAprobado,
-                [fecha_aprobacion_gerencial] = @HoraAprobacionGerente,
-                [id_gerente] =@GerenteID,
-                [status] = @EstadoNuevo
-        WHERE id_solicitud =@IdSolicitud`;
-
-        const result = await pool.request()
-        .input('ComentarioGerente', sql.VarChar(500), data.ComentarioGerente)
-        .input('FueAprobado', sql.Bit, data.FueAprobado)
-        .input('HoraAprobacionGerente', sql.DateTime, data.HoraAprobacionGerente)
-        .input('EstadoNuevo', sql.VarChar(100), data.EstadoNuevo)
-        .input('GerenteID', sql.Int, data.GerenteID)
-        .input('IdSolicitud', sql.Int, data.IdSolicitud)
-        .query(query);
-
-        return { success: true, rowsAffected: result.rowsAffected[0] };
-    } catch (error) {
-        console.error('Error al actualizar solicitud:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-
-export const db_Obtener_Solicitudes_Pendientes_Administrador = async() =>
-    {
-        try
-        {
-            await connectDB()
-            const query = `
-            SELECT
-                    Solicitudes.id_solicitud,
-                    Solicitudes.motivo_solicitud AS 'Comentario_Operador',
-                    Solicitudes.comentarioGerente AS 'Comentario_Gerente',
-                    Archivos.nombre AS 'Nombre_Archivo',
-                    Solicitante.nombre AS 'Nombre_solicitante',
-                    Gerente.nombre AS 'Nombre_Gerente',
-                    Solicitante.id_rol AS 'Rol_Solicitante'
-            FROM Solicitudes
-            INNER JOIN Archivos 
-                    ON Archivos.id_archivo = Solicitudes.id_archivo
-            INNER JOIN Usuarios AS Solicitante
-                    ON Solicitante.id_usuario = Solicitudes.id_solicitante
-            LEFT JOIN Usuarios AS Gerente
-                    ON Gerente.id_usuario = Solicitudes.id_gerente
-            WHERE status = 'APROBACION 1'
-            ORDER BY Solicitudes.id_solicitud DESC
-                `;
-
-        const result = await pool.request().query(query);
-        return result.recordset;
-        }
-        catch (error)
-        {
-            console.error(`Error al obtener las solictudes pendientes del Administrador, ${error.message}`);
-            return {}
-        }
-    }
-
-export const db_Actualizar_Solicitud_Pendientes_Administrador = async (data) => {
   try {
-    await connectDB();
-    const query = `
-                UPDATE [BibliotecaMLC].[dbo].[Solicitudes]
-                    SET [comentarioAdministrador]  = @ComentarioAdmnistrador,
-                        [aprobacionAdministracion] = @FueAprobado,
-                        [fecha_aprobacion_administrativa] = @HoraAprobacionAdministrador,
-                        [id_administrador] =@AdminID,
-                        [status] = @EstadoNuevo
-                WHERE id_solicitud =@IdSolicitud`;
+    // si tu connectDB en postgres solo asegura pool listo, llámalo aquí si aplica
+    // await connectDB();
 
-    const result = await pool
-      .request()
-      .input("ComentarioAdmnistrador", sql.VarChar(500), data.ComentarioAdmnistrador)
-      .input("FueAprobado", sql.Bit, data.FueAprobado)
-      .input("HoraAprobacionAdministrador", sql.DateTime, data.HoraAprobacionAdministrador)
-      .input("EstadoNuevo", sql.VarChar(100), data.EstadoNuevo)
-      .input("AdminID", sql.Int, data.AdminID)
-      .input("IdSolicitud", sql.Int, data.IdSolicitud)
-      .query(query);
-
-    return { success: true, rowsAffected: result.rowsAffected[0] };
+    const result = await pool.query(query, values);
+    return { success: true, id_solicitud: result.rows[0].id_solicitud };
   } catch (error) {
-    console.error("Error al actualizar solicitud:", error);
+    console.error("Error al insertar datos en PostgreSQL:", error.message);
     return { success: false, error: error.message };
   }
 };
 
 
-export const db_Obtener_Historial_Administrador = async () => {
-    try {
-        await connectDB();
-        const query = `
-        SELECT
-            Archivos.nombre AS 'Nombre_del_archivo',
-            Solicitante.nombre AS 'Nombre_de_solicitante',
-            Roles.Nombre AS 'Rol_De_Solicitante', 
-            Solicitudes.motivo_solicitud AS 'motivo_de_la_solicitud',
-            Solicitudes.fecha_solicitud AS 'fecha_solicitud',
-            Gerente.nombre AS 'Gerente_que_aprobo_solicitud',
-            Solicitudes.aprobacionGerencia AS 'aprobacion_gerencia',
-            Solicitudes.comentarioGerente AS 'Comentario_gerente',
-            Solicitudes.fecha_aprobacion_gerencial AS 'fecha_aprobacion_gerente',
-            Administrador.nombre AS 'nombre_administrador',
-            Solicitudes.aprobacionAdministracion AS 'aprobacion_administracion',
-            Solicitudes.comentarioAdministrador AS 'Comentario_administracion'
-        FROM 
-            Solicitudes
-            INNER JOIN Archivos ON Archivos.id_archivo = Solicitudes.id_archivo
-            INNER JOIN Usuarios AS Solicitante ON Solicitante.id_usuario = Solicitudes.id_solicitante
-            LEFT JOIN Usuarios AS Gerente ON Gerente.id_usuario = Solicitudes.id_gerente
-            LEFT JOIN Usuarios AS Administrador ON Administrador.id_usuario = Solicitudes.id_administrador
-            INNER JOIN Roles ON Roles.id_rol = Solicitante.id_rol;
-        `;
+export const db_Obtener_Solicitudes_Pendientes_Gerente = async () => {
+  try {
+    const query = `
+      SELECT
+        s.id_solicitud,
+        a.nombre AS "Nombre_del_archivo",
+        u.nombre AS "Nombre_de_solicitante",
+        s.motivo_solicitud AS "motivo_solicitud"
+      FROM solicitudes s
+      LEFT JOIN archivos a ON a.id_archivo = s.id_archivo
+      LEFT JOIN usuarios u ON u.id_usuario = s.id_solicitante
+      WHERE s.status = 'SOLICITADA'
+      ORDER BY s.id_solicitud DESC;
+    `;
 
-        const result = await pool.request().query(query); // Corrección aquí
-        return result.recordset; // Retorna los resultados
-    } catch (error) {
-        console.error('Error al ejecutar la consulta:', error.message); // Log del error
-        return []; // Devuelve un arreglo vacío en caso de error
-    }
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error gerente pendientes:", error.message);
+    return [];
+  }
 };
 
+export const db_Actualizar_Solicitud_Pendientes_Gerente = async (data) => {
+  try {
+    const query = `
+      UPDATE solicitudes
+      SET
+        comentariogerente = $1,
+        aprobaciongerencia = $2,
+        fecha_aprobacion_gerencial = $3,
+        id_gerente = $4,
+        status = $5
+      WHERE id_solicitud = $6;
+    `;
 
-export const db_ObtenerCorreoMiGerente = async (UserID)=>
-{
-    try {
-        await connectDB();
-        const query = `
-       SELECT 
-        TOP 1 gerente.email AS EmailGerente
-        FROM 
-            [BibliotecaMLC].[dbo].[Usuarios] operador
-        JOIN 
-            [BibliotecaMLC].[dbo].[Usuarios] gerente
-            ON operador.Departamento = gerente.Departamento
-            AND gerente.id_rol = 'GER'
-        WHERE 
-            operador.id_usuario = @idUsuario;
-                `;
-        const result = await pool.request()
-        .input('idUsuario', sql.Int, UserID)
-        .query(query);
-        return result.recordset[0].EmailGerente;
-    } catch (error) {
-        console.error('Error al ejecutar la consulta:', error);
-        return ""
-    }
-}
+    const values = [
+      data.ComentarioGerente ?? null,
+      data.FueAprobado, // boolean
+      data.HoraAprobacionGerente ?? null, // timestamp/timestamptz
+      data.GerenteID ?? null,
+      data.EstadoNuevo,
+      data.IdSolicitud,
+    ];
 
+    const result = await pool.query(query, values);
+    return { success: true, rowsAffected: result.rowCount };
+  } catch (error) {
+    console.error("Error al actualizar solicitud gerente:", error.message);
+    return { success: false, error: error.message };
+  }
+};
 
-export const db_ObtenerNombreDeArchivoSegunID = async(idArchivo) =>
-    {
-        try {
-            await connectDB();
-            const query = `
-            SELECT TOP (1)
-                [nombre]
-            FROM [BibliotecaMLC].[dbo].[Archivos]
-            where id_archivo = @idArchivo
-                    `;
-            const result = await pool.request()
-            .input('idArchivo', sql.Int, idArchivo)
-            .query(query);
-            return result.recordset[0].nombre;
-        } catch (error) {
-            console.error('Error al ejecutar la consulta:', error);
-            return "Archivo No encontrado"
-        }
-    }
+export const db_Obtener_Solicitudes_Pendientes_Administrador = async () => {
+  try {
+    const query = `
+      SELECT
+        s.id_solicitud,
+        s.motivo_solicitud AS "Comentario_Operador",
+        s.comentariogerente AS "Comentario_Gerente",
+        a.nombre AS "Nombre_Archivo",
+        solicitante.nombre AS "Nombre_solicitante",
+        gerente.nombre AS "Nombre_Gerente",
+        solicitante.id_rol AS "Rol_Solicitante"
+      FROM solicitudes s
+      INNER JOIN archivos a
+        ON a.id_archivo = s.id_archivo
+      INNER JOIN usuarios AS solicitante
+        ON solicitante.id_usuario = s.id_solicitante
+      LEFT JOIN usuarios AS gerente
+        ON gerente.id_usuario = s.id_gerente
+      WHERE s.status = 'APROBACION 1'
+      ORDER BY s.id_solicitud DESC;
+    `;
 
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error(`Error admin pendientes: ${error.message}`);
+    return [];
+  }
+};
 
- 
-export const db_ObtenerDataSolicitud = async (idSolicitud) =>
-{
-    try {
-        await connectDB();
-        const query = `
-        SELECT
+export const db_Actualizar_Solicitud_Pendientes_Administrador = async (data) => {
+  try {
+    const query = `
+      UPDATE solicitudes
+      SET
+        comentarioadministrador = $1,
+        aprobacionadministracion = $2,
+        fecha_aprobacion_administrativa = $3,
+        id_administrador = $4,
+        status = $5
+      WHERE id_solicitud = $6;
+    `;
 
-            Solicitante.nombre AS 'Nombre_de_solicitante',
-			Archivos.nombre as 'Nombre_Archivo',
-            Solicitudes.motivo_solicitud AS 'motivo_de_la_solicitud',
-            Solicitudes.fecha_solicitud AS 'fecha_solicitud',
-            Gerente.nombre AS 'Gerente_que_aprobo_solicitud',
-            Solicitudes.comentarioGerente AS 'Comentario_gerente',
-            Solicitudes.fecha_aprobacion_gerencial AS 'fecha_aprobacion_gerente'
-        FROM 
-            Solicitudes
-            INNER JOIN Archivos ON Archivos.id_archivo = Solicitudes.id_archivo
-            INNER JOIN Usuarios AS Solicitante ON Solicitante.id_usuario = Solicitudes.id_solicitante
-            LEFT JOIN Usuarios AS Gerente ON Gerente.id_usuario = Solicitudes.id_gerente
-            LEFT JOIN Usuarios AS Administrador ON Administrador.id_usuario = Solicitudes.id_administrador
-            INNER JOIN Roles ON Roles.id_rol = Solicitante.id_rol
-		where Solicitudes.id_solicitud =@idSolicitud
-                `;
-        const result = await pool.request()
-        .input('idSolicitud', sql.Int, idSolicitud)
-        .query(query);
-        return result.recordset[0];
-    } catch (error) {
-        console.error('Error al ejecutar la consulta:', error);
-        return {}
-    }
+    const values = [
+      data.ComentarioAdmnistrador ?? null,
+      data.FueAprobado, // boolean
+      data.HoraAprobacionAdministrador ?? null,
+      data.AdminID ?? null,
+      data.EstadoNuevo,
+      data.IdSolicitud,
+    ];
 
+    const result = await pool.query(query, values);
+    return { success: true, rowsAffected: result.rowCount };
+  } catch (error) {
+    console.error("Error al actualizar solicitud admin:", error.message);
+    return { success: false, error: error.message };
+  }
+};
 
-}
+export const db_Obtener_Historial_Administrador = async () => {
+  try {
+    const query = `
+      SELECT
+        a.nombre AS "Nombre_del_archivo",
+        solicitante.nombre AS "Nombre_de_solicitante",
+        r.nombre AS "Rol_De_Solicitante",
+        s.motivo_solicitud AS "motivo_de_la_solicitud",
+        s.fecha_solicitud AS "fecha_solicitud",
+        gerente.nombre AS "Gerente_que_aprobo_solicitud",
+        s.aprobaciongerencia AS "aprobacion_gerencia",
+        s.comentariogerente AS "Comentario_gerente",
+        s.fecha_aprobacion_gerencial AS "fecha_aprobacion_gerente",
+        administrador.nombre AS "nombre_administrador",
+        s.aprobacionadministracion AS "aprobacion_administracion",
+        s.comentarioadministrador AS "Comentario_administracion"
+      FROM solicitudes s
+      INNER JOIN archivos a ON a.id_archivo = s.id_archivo
+      INNER JOIN usuarios AS solicitante ON solicitante.id_usuario = s.id_solicitante
+      LEFT JOIN usuarios AS gerente ON gerente.id_usuario = s.id_gerente
+      LEFT JOIN usuarios AS administrador ON administrador.id_usuario = s.id_administrador
+      INNER JOIN roles r ON r.id_rol = solicitante.id_rol;
+    `;
+
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (error) {
+    console.error("Error historial admin:", error.message);
+    return [];
+  }
+};
+
+export const db_ObtenerCorreoMiGerente = async (UserID) => {
+  try {
+    const query = `
+      SELECT gerente.email AS "EmailGerente"
+      FROM usuarios operador
+      JOIN usuarios gerente
+        ON operador.departamento = gerente.departamento
+        AND gerente.id_rol = 'GER'
+      WHERE operador.id_usuario = $1
+      LIMIT 1;
+    `;
+
+    const result = await pool.query(query, [UserID]);
+    return result.rows?.[0]?.EmailGerente ?? "";
+  } catch (error) {
+    console.error("Error obtener correo gerente:", error.message);
+    return "";
+  }
+};
+
+export const db_ObtenerNombreDeArchivoSegunID = async (idArchivo) => {
+  try {
+    const query = `
+      SELECT nombre
+      FROM archivos
+      WHERE id_archivo = $1
+      LIMIT 1;
+    `;
+
+    const result = await pool.query(query, [idArchivo]);
+    return result.rows?.[0]?.nombre ?? "Archivo No encontrado";
+  } catch (error) {
+    console.error("Error obtener nombre archivo:", error.message);
+    return "Archivo No encontrado";
+  }
+};
+
+export const db_ObtenerDataSolicitud = async (idSolicitud) => {
+  try {
+    const query = `
+      SELECT
+        solicitante.nombre AS "Nombre_de_solicitante",
+        a.nombre AS "Nombre_Archivo",
+        s.motivo_solicitud AS "motivo_de_la_solicitud",
+        s.fecha_solicitud AS "fecha_solicitud",
+        gerente.nombre AS "Gerente_que_aprobo_solicitud",
+        s.comentariogerente AS "Comentario_gerente",
+        s.fecha_aprobacion_gerencial AS "fecha_aprobacion_gerente"
+      FROM solicitudes s
+      INNER JOIN archivos a ON a.id_archivo = s.id_archivo
+      INNER JOIN usuarios AS solicitante ON solicitante.id_usuario = s.id_solicitante
+      LEFT JOIN usuarios AS gerente ON gerente.id_usuario = s.id_gerente
+      LEFT JOIN usuarios AS administrador ON administrador.id_usuario = s.id_administrador
+      INNER JOIN roles r ON r.id_rol = solicitante.id_rol
+      WHERE s.id_solicitud = $1
+      LIMIT 1;
+    `;
+
+    const result = await pool.query(query, [idSolicitud]);
+    return result.rows?.[0] ?? {};
+  } catch (error) {
+    console.error("Error obtener data solicitud:", error.message);
+    return {};
+  }
+};

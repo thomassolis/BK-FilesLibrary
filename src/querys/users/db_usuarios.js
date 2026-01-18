@@ -1,70 +1,77 @@
 import { pool } from "../../../config/db.js"
-import sql from 'mssql';
 import { generateQRCode } from "../../controllers/2FA/generataSecretQr.js";
 
 //CREACIÓN DE USUARIO EN LA BD
-export const crearUsuario = async(nombre, apellido, departamento, correo, contraseñaEncriptada, rol, secret) => {
-    // Iniciar transacción
-    const transaction = new sql.Transaction(pool);
+export const crearUsuario = async (
+  nombre,
+  apellido,
+  departamento,
+  correo,
+  contraseñaEncriptada,
+  rol,
+  secret
+) => {
+  // Iniciar transacción (PostgreSQL)
+  const transaction = await pool.connect();
 
-    try {
-        await transaction.begin();
+  try {
+    await transaction.query("BEGIN");
 
-        // Ejecutar la consulta de inserción
-        const result = await transaction.request()
-            .input("nombre", sql.VarChar, nombre)
-            .input("apellido", sql.VarChar, apellido)
-            .input("email", sql.VarChar, correo)
-            .input("contraseña", sql.VarChar, contraseñaEncriptada) // Usa la contraseña encriptada          
-            .input("id_rol", sql.VarChar, rol)
-            .input("secret", sql.VarChar, secret)  // Almacenar el secreto
-            .input("departamento", sql.VarChar, departamento)  // Almacenar el secreto
-            .query(`
-                INSERT INTO [BibliotecaMLC].[dbo].[Usuarios] 
-                ([nombre], [apellido], [email], [contraseña], [id_rol], [secret], [departamento])
-                VALUES 
-                (@nombre, @apellido, @email, @contraseña, @id_rol, @secret, @departamento)
-            `);
+    // Insert (Postgres usa $1..$n en vez de @params)
+    const result = await transaction.query(
+      `
+      INSERT INTO public.usuarios
+        (nombre, apellido, email, "contraseña", id_rol, secret, departamento)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id_usuario;
+      `,
+      [nombre, apellido, correo, contraseñaEncriptada, rol, secret, departamento]
+    );
 
-        // Generar el QR con el nombre único basado en nombre y apellido
-        const generated = await generateQRCode(nombre, apellido, secret);
+    // Generar el QR con el nombre único basado en nombre y apellido
+    const generated = await generateQRCode(nombre, apellido, secret);
 
-        if (!generated) {
-            // En caso de error se revierte el insert
-            await transaction.rollback();
-            throw new Error(`Error al general el QR del usuario ${nombre} ${apellido}`);            
-        }
-
-        // Si todo está bien, se realiza un commit y se hace el insert
-        await transaction.commit();
-        
-        return result.rowsAffected[0];
-    } catch (error) {
-        // En caso de error se revierte el insert
-        await transaction.rollback();
-        console.error('Error al crear el usuario, ', error.message);
-        throw new Error('Error al crear el usuario');
+    if (!generated) {
+      await transaction.query("ROLLBACK");
+      throw new Error(`Error al generar el QR del usuario ${nombre} ${apellido}`);
     }
-}
+
+    await transaction.query("COMMIT");
+
+    // Similar a rowsAffected[0] en mssql: devolvemos 1 si insertó
+    return 1;
+  } catch (error) {
+    try {
+      await transaction.query("ROLLBACK");
+    } catch (_) {}
+
+    console.error("Error al crear el usuario, ", error.message);
+    throw new Error("Error al crear el usuario");
+  } finally {
+    transaction.release();
+  }
+};
+
 
 //VERIFICAR SI EL SECRETO CONCUERDA CON EL USUARIO POR MEDIO DEL CORREO ELECTRÓNICO
-export const secretVerification = async(userEmail) =>{
-    try{
+export const secretVerification = async (userEmail) => {
+  try {
+    const result = await pool.query(
+      `SELECT secret
+       FROM public.usuarios
+       WHERE email = $1
+       LIMIT 1;`,
+      [userEmail]
+    );
 
-        await pool.connect();
-        const result = await pool.request()
-            .input("email", sql.VarChar, userEmail)
-            .query(`
-                SELECT secret FROM [BibliotecaMLC].[dbo].[Usuarios] WHERE email = @email
-            `);
+    return result.rows?.[0]?.secret ?? null;
+  } catch (e) {
+    console.log("error en secretVerification", e);
+    throw new Error("Error al obtener el secreto");
+  }
+};
 
-        return result.recordset[0].secret;
-
-    }catch(e){
-        console.log('error en secretVerification',e)
-        throw new Error('Error al obtener el secreto');
-    }
-}
 
 
 //VALIDA QUE EL CORREO NO ESTE REGISTRADO EN LA BASE DE DATOS

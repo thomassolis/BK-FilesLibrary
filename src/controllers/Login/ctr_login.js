@@ -6,8 +6,9 @@ import { verifyTOTP } from "../2FA/verificar2FA.js";
 import { pool } from "../../../config/db.js";
 import  sql from "mssql";
 import { secretVerification } from "../../querys/users/db_usuarios.js";
-export const controladorRutaLoginPost = async (req, res) => {
+export const controladorRutaLoginPost = async (req, res) => {    
     const { Email, Password } = req.body;
+    console.log('entre al login')
     try
     {
         const userData = await validacionUsuario(Email, Password);

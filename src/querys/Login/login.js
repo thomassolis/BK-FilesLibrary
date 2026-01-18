@@ -1,5 +1,4 @@
-import { pool, connectDB} from "../../../config/db.js";
-import sql from 'mssql';
+import { pool } from "../../../config/db.js";
 import { resetearBaneo } from "./resetearBaneo.js";
 import { verificarBaneo } from "../../Verificador/ValidacionesLogin/verificarBaneo.js";
 import { verificarContraseña } from "../../Verificador/ValidacionesLogin/verificarContrasena.js";
@@ -8,78 +7,74 @@ import CustomError from "../../errors/CustomErros.js";
 import { InternalServerError } from "../../errors/serverErrors.js";
 
 export const validacionUsuario = async (Email, PassWord) => {
-    try {
-        const result = await pool.request()
-            .input("Email", sql.VarChar, Email)
-            .query(`SELECT 
-                        U.[id_usuario],
-                        U.[nombre], 
-                        U.[apellido], 
-                        U.[email], 
-                        U.[contraseña], 
-                        U.[num_intentos],
-                        U.[isBaned],
-                        U.[fecha_baneo],
-                        R.[id_rol] AS nombre_rol
-                    FROM 
-                        [BibliotecaMLC].[dbo].[Usuarios] U
-                    LEFT JOIN 
-                        [BibliotecaMLC].[dbo].[Roles] R
-                    ON 
-                        U.[id_rol] = R.[id_rol]
-                    WHERE 
-                    U.[email] = @Email`);
+  try {
+    const query = `
+      SELECT
+        u.id_usuario,
+        u.nombre,
+        u.apellido,
+        u.email,
+        u."contraseña"      AS contraseña,
+        u.num_intentos,
+        u.isbaned           AS "isBaned",
+        u.fecha_baneo,
+        r.id_rol            AS nombre_rol
+      FROM public.usuarios u
+      LEFT JOIN public.roles r
+        ON u.id_rol = r.id_rol
+      WHERE u.email = $1
+      LIMIT 1;
+    `;
 
-        const user = result.recordset[0];
-        
-        if (!user) { throw new InvalidCredentialsError}
+    const { rows } = await pool.query(query, [Email]);
+    const user = rows[0];
 
-        verificarBaneo(user)
-        await verificarContraseña(PassWord, user.contraseña, user.id_usuario, user.num_intentos)
-
-
-        if (user.isBaned) {
-            await resetearBaneo(user.id_usuario);
-        }
-
-        
-        return {
-            id_usuario: user.id_usuario,
-            nombre: user.nombre,
-            apellido: user.apellido,
-            email: user.email,
-            nombre_rol: user.nombre_rol,
-        };
-
-    } 
-    catch (error) {
-        console.error('Error al autenticar usuario:', error.message);
-        if (error instanceof CustomError) {
-            throw error;
-        }
-        throw new InternalServerError
+    if (!user) {
+      throw new InvalidCredentialsError();
     }
+
+    verificarBaneo(user);
+
+    // OJO: aquí tu "user.contraseña" funciona porque lo alias-eamos como "contraseña"
+    await verificarContraseña(PassWord, user.contraseña, user.id_usuario, user.num_intentos);
+
+    if (user.isBaned) {
+      await resetearBaneo(user.id_usuario);
+    }
+
+    return {
+      id_usuario: user.id_usuario,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      email: user.email,
+      nombre_rol: user.nombre_rol,
+    };
+  } catch (error) {
+    console.error("Error al autenticar usuario:", error.message);
+    if (error instanceof CustomError) throw error;
+    throw new InternalServerError();
+  }
 };
+
 
 
 export const ObtenerEmailPorIdUser = async (userID) => {
     try {
-        await connectDB();
+        const query = `
+            SELECT email
+            FROM public.usuarios
+            WHERE id_usuario = $1
+            LIMIT 1
+        `;
+        
+        const { rows } = await pool.query(query, [userID]);
 
-        const result = await pool.request()
-            .input("userID", sql.Int, userID)
-            .query(`
-                SELECT [email]
-                FROM [BibliotecaMLC].[dbo].[Usuarios]
-                WHERE [id_usuario] = @userID
-            `);
-
-        if (result.recordset.length === 0) {
+        if (rows.length === 0) {
             console.warn(`No se encontró un usuario con el ID ${userID}`);
             return null;
         }
 
-        return result.recordset[0].email;
+        return rows[0].email;
     } catch (error) {
         console.error("Error al obtener el email del usuario:", error);
         throw new Error("Error al obtener el email del usuario");

@@ -1,65 +1,59 @@
 
 import { pool } from "../../../config/db.js";
-import  sql from "mssql";
 
 export const db_Obtener_Archivos_Permitidos_Por_Usuario = async (rol) => {
-    try {
-        await pool.connect();
-        const query = `SELECT 
-                permiso.[verArchivo],
-                permiso.[enviarSolicitud],
-                permiso.[id_archivo],
-                permiso.[id_rol],
-                archivo.[nombre],
-                archivo.[driveID]
-            FROM 
-                [BibliotecaMLC].[dbo].[Permisos_archivo] AS permiso
-            JOIN 
-                [BibliotecaMLC].[dbo].[Archivos] AS archivo
-            ON 
-                permiso.[id_archivo] = archivo.[id_archivo]
-            WHERE 
-                permiso.[id_rol] = @id_rol;`;
+  try {
+    const query = `
+      SELECT 
+        permiso.verarchivo      AS "verArchivo",
+        permiso.enviarsolicitud AS "enviarSolicitud",
+        permiso.id_archivo      AS "id_archivo",
+        permiso.id_rol          AS "id_rol",
+        archivo.nombre          AS "nombre",
+        archivo.driveid         AS "driveID"
+      FROM public.permisos_archivo AS permiso
+      JOIN public.archivos AS archivo
+        ON permiso.id_archivo = archivo.id_archivo
+      WHERE permiso.id_rol = $1
+        AND permiso.verarchivo = true;
+    `;
 
-        const result = await pool.request()
-            .input('id_rol', sql.VarChar, rol)
-            .query(query);
+    const result = await pool.query(query, [rol]);
 
-       return result.recordset;
-    } catch (error) {
-        console.error('Error al obtener archivos permitidos:', error.message);
-        throw new Error(`Error al obtener archivos permitidos: ${error.message}`);
-    }
+    return result.rows;
+  } catch (error) {
+    console.error("Error al obtener archivos permitidos:", error.message);
+    throw new Error("Error al obtener archivos permitidos");
+  }
 };
+
 
 export const verificar_Permiso_Para_Archivo = async (rol, id_archivo) => {
-    try {
-        await pool.connect();
-        const query = `
-        SELECT 
-                archivo.[nombre],
-                archivo.[driveID],
-				archivo.path
-            FROM 
-                [BibliotecaMLC].[dbo].[Permisos_archivo] AS permiso
-            JOIN 
-                [BibliotecaMLC].[dbo].[Archivos] AS archivo
-            ON 
-                permiso.[id_archivo] = archivo.[id_archivo]
-            WHERE 
-                permiso.[id_rol] = @rol
-				and Archivo.id_archivo =@id_archivo`;
+  try {
+    const query = `
+      SELECT 
+        archivo.nombre      AS "nombre",
+        archivo.driveid     AS "driveID",
+        archivo.path        AS "path"
+      FROM public.permisos_archivo AS permiso
+      JOIN public.archivos AS archivo
+        ON permiso.id_archivo = archivo.id_archivo
+      WHERE permiso.id_rol = $1
+        AND archivo.id_archivo = $2
+        AND permiso.verarchivo = true
+      LIMIT 1;
+    `;
 
-        const result = await pool.request()
-            .input('rol', sql.VarChar, rol)
-            .input('id_archivo', sql.Int, id_archivo)
-            .query(query);
-       return result.recordset;
-    } catch (error) {
-        console.error('Error al obtener archivos permitidos:', error.message);
-        throw new Error(`Error al obtener archivos permitidos: ${error.message}`);
-    }
+    const result = await pool.query(query, [rol, id_archivo]);
+
+    // Para que se parezca a recordset de mssql:
+    return result.rows;
+  } catch (error) {
+    console.error("Error al obtener archivos permitidos:", error.message);
+    throw new Error(`Error al obtener archivos permitidos: ${error.message}`);
+  }
 };
+
 
 export const obtener_Drive_ID_BY_Solicitud =  async (id_Solicitud) =>
 {

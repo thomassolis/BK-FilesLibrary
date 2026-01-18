@@ -26,10 +26,6 @@ const authenticate = () => {
 };
 
 const listFolderContentsRecursively = async (drive, folderId, allowedDriveIDs, isRoot = false) => {
-    // console.log('drive>', drive)
-    // console.log('drive>', folderId)
-    // console.log('drive>', allowedDriveIDs)
-    // console.log('drive>', isRoot)
     try {
         const response = await drive.files.list({
             fields: 'files(id, name, mimeType)',
@@ -64,7 +60,7 @@ const listFolderContentsRecursively = async (drive, folderId, allowedDriveIDs, i
 export const listFilesInDrive = async (DriveIDs) => {
     const auth = authenticate();
     const drive = google.drive({ version: 'v3', auth });
-    const mainFolderId = '1DSvJhsEbvZW4AipjsYBQAnUnnU-u07Wa';
+    const mainFolderId = process.env.GOOGLE_DRIVE_MAIN_FOLDER_ID;
     const driveStructure = await listFolderContentsRecursively(drive, mainFolderId, DriveIDs, true);
     return driveStructure;
 };
@@ -144,7 +140,6 @@ export const listNonFolderFilesInDrive = async () => {
 
 
 export const ObtenerLinkArchivoDrive = async (Drive_Id) => {
-    console.log('ObtenerLinkArchivoDrive')
     const auth = authenticate();
     const drive = google.drive({ version: "v3", auth });
 
@@ -176,37 +171,3 @@ export const ObtenerLinkArchivoDrive = async (Drive_Id) => {
         throw error;
     }
 };
-
-
-
-/*
-
-export const ObtenerTodosLosArchivosDesdeDrive = async (carpetaPadreId) => {
-    const auth = authenticate(); // Autenticación en Google Drive
-    const drive = google.drive({ version: 'v3', auth });
-
-    try {
-        const response = await drive.files.list({
-            q: `'${carpetaPadreId}' in parents and trashed=false`,
-            pageSize: 1000, // Número de archivos por página (máximo recomendado)
-            fields: 'files(id, name, mimeType, size, modifiedTime)', // Campos que queremos recuperar
-        });
-
-        const archivos = response.data.files;
-        console.log(archivos)
-
-        if (!archivos.length) {
-            console.log('No se encontraron archivos en Google Drive.');
-            return [];
-        }
-
-        console.log(`📂 Se encontraron ${archivos.length} archivos en Drive.`);
-        return archivos; // Retorna la lista de archivos con su ID, nombre y tipo
-
-    } catch (error) {
-        console.error('⚠️ Error al obtener los archivos desde Drive:', error.message);
-        return [];
-    }
-};
-
-await ObtenerTodosLosArchivosDesdeDrive('1IjpYoGj-py_uyOpJjWuMWuYh1YIjA-wE')*/

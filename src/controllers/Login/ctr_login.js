@@ -40,6 +40,7 @@ export const controladorRutaLoginPost = async (req, res) => {
 
 export const controladorRutaAuthenticationPost = async (req, res) => {
     const { authentication, userEmail  } = req.body;  // Asegúrate de pasar el email para buscar el secreto del usuario
+    console.log(authentication, userEmail)
 
     try {
         const secretByUser = await secretVerification(userEmail); // Obtener el secreto desde la base de datos

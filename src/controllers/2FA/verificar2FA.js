@@ -19,7 +19,7 @@ export const verifyTOTP = (secret, token) => {
     encoding: "base32",
     token: cleanToken,
     step: 30,
-    window: 1,
+    window: 4
   });
 
   if (okBase32) return true;

@@ -50,7 +50,12 @@ export const controladorRutaAuthenticationPost = async (req, res) => {
             return res.status(404).json({ success: false, message: "Error al obtener la verificación" });
         } 
         const isCodeValid = verifyTOTP(secretByUser, authentication);  // Verificar el código con el secreto del usuario
-
+console.log("SERVER ISO:", new Date().toISOString());
+console.log("secret_len:", String(secret ?? "").length);
+console.log(
+  "secret_fp:",
+  crypto.createHash("sha256").update(String(secret ?? "")).digest("hex").slice(0, 12)
+);
         if (isCodeValid) {
             const token = await generateJWT(req.user, true);
             res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'strict' });

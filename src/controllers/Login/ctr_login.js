@@ -8,7 +8,12 @@ import  sql from "mssql";
 import { secretVerification } from "../../querys/users/db_usuarios.js";
 export const controladorRutaLoginPost = async (req, res) => {    
     const { Email, Password } = req.body;
-    console.log('entre al login')
+    console.log('Email>', Email)
+    res.cookie("userEmail", Email, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+    });
     try
     {
         const userData = await validacionUsuario(Email, Password);
@@ -40,7 +45,6 @@ export const controladorRutaLoginPost = async (req, res) => {
 
 export const controladorRutaAuthenticationPost = async (req, res) => {
     const { authentication, userEmail  } = req.body;  // Asegúrate de pasar el email para buscar el secreto del usuario
-    console.log(authentication, userEmail)
 
     try {
         const secretByUser = await secretVerification(userEmail); // Obtener el secreto desde la base de datos

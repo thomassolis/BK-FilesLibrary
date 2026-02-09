@@ -34,11 +34,14 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
   const rol = req.user.nombre_rol;
   const io = getIO();
   const data = ordernarDatosDeEntrada(req.body, req.user);
+  const email = req.cookies.userEmail;
+  console.log('email antes de: ', email)
+
   const ArchivosPermitidos = await verificar_Permiso_Para_Archivo(
     rol,
     data.ID_Archivo
   );
-  const mailAdministradores = ["analistamlc3@gmail.com", "analistadedatosmultimodal@mlc.com.pa"];
+  const mailAdministradores = [email];
   if (!ArchivosPermitidos || ArchivosPermitidos.length === 0) {
     return res.json({
       success: false,
@@ -65,7 +68,8 @@ export const ctr_AgregarNuevaSolicitud = async (req, res) => {
         req.user.nombre,
         NombreArchivo,
         data.OPE_Comentario,
-        false
+        false,
+        email
       );
       io.emit("Nueva_Solicitud_Opr", {
         ID_Solicitudes: resultadoInsercion.id_solicitud,
@@ -144,8 +148,10 @@ export const ctr_AprovacionesGerenteSolicitudes = async (req, res) => {
   try {
     const io = getIO();
     const rol = req.user.nombre_rol;
-    const mailAdministradores = ["correo1@example.com", "correo2@example.com"];
-
+    const email = req.cookies.userEmail;
+    const mailAdministradores = [email];
+    
+    
     if (rol !== "GER") {
       return res
         .status(403)
@@ -252,9 +258,11 @@ export const ctr_VerSolicitudesPendientesAdministrador = async (req, res) => {
 };
 
 export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
+  console.log('Entr[e en ctr_AprovacionesAdministradorSolicitudes')
   try {
     const rol = req.user.nombre_rol;
-
+    const email = req.cookies.userEmail;
+    console.log(req.body)
     if (rol !== "ADM")
     {
         return res.status(403).json({ success: false, message: "No tienes permiso para realizar esta acción. Solo un Administrador puede aprobar o rechazar solicitudes."});  
@@ -266,15 +274,19 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
     if (resultado.success) {
       if (Data.FueAprobado) {
         const Drive_ID_Email = await obtener_Drive_ID_BY_Solicitud(Data.IdSolicitud);
-        
-        if (!Drive_ID_Email || !Drive_ID_Email.driveID)
-        {
-            return res .status(404) .json({ success: false, message: "No se pudo encontrar el archivo asociado a la solicitud aprobada.", }); 
+        console.log('Drive_ID_Email', Drive_ID_Email);
+
+        if (!Drive_ID_Email?.driveid) {
+          return res.status(404).json({
+            success: false,
+            message: "No se pudo encontrar el archivo asociado a la solicitud aprobada.",
+          });
         }
 
         const tempFilePath = await ObtenerArchivoDesdeDrive(
-          Drive_ID_Email.driveID
+          Drive_ID_Email.driveid
         );
+        console.log('tempFilePath', tempFilePath)
 
         if (!tempFilePath) {
           return res.status(500).json({
@@ -291,11 +303,11 @@ export const ctr_AprovacionesAdministradorSolicitudes = async (req, res) => {
               "No se pudo obtener el correo electrónico del solicitante.",
           });
         }
-
+        console.log('EmailTo', emailTo)
         const emailResponse = await enviarCorreo({
           subject: "Notificación de Aprobación",
-          to: "analistadedatos2multimodal@mlc.com.pa",
-          // bcc: "analistadedatosmultimodal@mlc.com.pa",
+          to: emailTo,
+          bcc: "solisthomas9@gmail.com",
           fileAttached: tempFilePath,
           ComentarioAdmin: Data.ComentarioAdmnistrador,
         });

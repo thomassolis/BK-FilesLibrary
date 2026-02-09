@@ -7,21 +7,21 @@ import { ctr_AgregarNuevaSolicitud, ctr_AprovacionesAdministradorSolicitudes, ct
 const router = Router();
 
 // agrega una nueva, tanto como operador como Gerente
-router.post('/agregar/nueva', verificarToken, is2FAuthenticate, ctr_AgregarNuevaSolicitud); 
+router.post('/agregar/nueva', verificarToken, /*is2FAuthenticate,*/ ctr_AgregarNuevaSolicitud); 
 
 //permite ver el Historial de solicitudes pendientes del Gerente
-router.get('/ver/pendientes/gerencia', verificarToken, is2FAuthenticate, ctr_VerSolicitudesPendientesGerencia); 
+router.get('/ver/pendientes/gerencia', verificarToken, /*is2FAuthenticate,*/ ctr_VerSolicitudesPendientesGerencia); 
 
 // maneja las aprovaciones de solicitudes que llegan a los gerentes
-router.post('/aprobacion/solicitud/gerente', verificarToken, is2FAuthenticate, ctr_AprovacionesGerenteSolicitudes)
+router.post('/aprobacion/solicitud/gerente', verificarToken, /*is2FAuthenticate,*/ ctr_AprovacionesGerenteSolicitudes)
 
 
 /****************************          ADMINISTRADOR               ************************************************** */
-router.get('/ver/pendientes/administrador', verificarToken, is2FAuthenticate, ctr_VerSolicitudesPendientesAdministrador); 
+router.get('/ver/pendientes/administrador', verificarToken, /*is2FAuthenticate,*/ ctr_VerSolicitudesPendientesAdministrador); 
 
-router.post('/aprobacion/solicitud/administrador', verificarToken, is2FAuthenticate, ctr_AprovacionesAdministradorSolicitudes)
+router.post('/aprobacion/solicitud/administrador', verificarToken, /*is2FAuthenticate,*/ ctr_AprovacionesAdministradorSolicitudes)
 
-router.get('/ver/historial/solicitudes/administrador', verificarToken, is2FAuthenticate, ctr_ObtenerHistorialAdministrador)
+router.get('/ver/historial/solicitudes/administrador', verificarToken, /*is2FAuthenticate,*/ ctr_ObtenerHistorialAdministrador)
 
 
 export { router as solicitudesRoutes };

@@ -68,6 +68,7 @@ export const listFilesInDrive = async (DriveIDs) => {
 export const ObtenerArchivoDesdeDrive = async (Drive_Id) => {
     const auth = authenticate();
     const drive = google.drive({ version: 'v3', auth });
+    console.log('driveID ObtenerArchivoDesdeDrive: ', Drive_Id)
 
     try {
         // Obtener metadatos del archivo para recuperar el nombre real
@@ -92,7 +93,7 @@ export const ObtenerArchivoDesdeDrive = async (Drive_Id) => {
         await new Promise((resolve, reject) => {
             response.data
                 .on('end', () => {
-                    console.log('Archivo descargado correctamente.');
+                
                     resolve();
                 })
                 .on('error', (err) => {

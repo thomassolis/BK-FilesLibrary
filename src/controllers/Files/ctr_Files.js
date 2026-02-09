@@ -44,7 +44,7 @@ export const ctr_Archivos_Copia = async (req, res) => {
     const id_archivo = req.params.idDrive;
     try {
         const esPermitidoVer = await verificar_Permiso_Para_Archivo(Rol, id_archivo);
-        console.log('esPermitidoVer: ', esPermitidoVer)
+
         if (!esPermitidoVer ) {
             return res.status(403).json({ success: false, message: 'Ha ocurrido un error al obtener los archivos' });
         }
@@ -69,7 +69,7 @@ export const ctr_Archivos_Copia = async (req, res) => {
                 const contentType = mimeTypes[ext] || "application/octet-stream";
                 res.setHeader("Content-Type", contentType);
                 res.setHeader("Content-Disposition", `inline; filename="${path.basename(filePath)}"`);                
-                console.log('fileBuffer: ', fileBuffer)
+            
                 return res.send(fileBuffer);
             } 
             catch (error) {
@@ -86,7 +86,7 @@ export const ctr_Archivos_Copia = async (req, res) => {
                 try
                 {
                     const archivoLink = await ObtenerLinkArchivoDrive(DriveId);
-                    console.log('archivoLink> ', archivoLink)
+                    
                     return res.json({ success: true, link: archivoLink });
                 }
                 catch (error)

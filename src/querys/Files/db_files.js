@@ -49,43 +49,40 @@ export const verificar_Permiso_Para_Archivo = async (rol, id_archivo) => {
     // Para que se parezca a recordset de mssql:
     return result.rows;
   } catch (error) {
-    console.error("Error al obtener archivos permitidos:", error.message);
+    console.error("Error al obtener archivos permitidostest:", error.message);
     throw new Error(`Error al obtener archivos permitidos: ${error.message}`);
   }
 };
 
 
-export const obtener_Drive_ID_BY_Solicitud =  async (id_Solicitud) =>
-{
+export const obtener_Drive_ID_BY_Solicitud = async (id_Solicitud) => {
+  console.log('id_Solicitud', id_Solicitud)
     try {
-        await pool.connect();
         const query = `
         SELECT 
-            Arch.driveID
+            Arch."driveid"
         FROM 
-            [BibliotecaMLC].[dbo].[Solicitudes] AS Solic
+            "solicitudes" AS Solic
         INNER JOIN 
-            [BibliotecaMLC].[dbo].[Archivos] AS Arch
-            ON Solic.id_archivo = Arch.id_archivo
+            "archivos" AS Arch
+            ON Solic."id_archivo" = Arch."id_archivo"
         INNER JOIN 
-            [BibliotecaMLC].[dbo].[Usuarios] AS [User]
-            ON [User].id_usuario = Solic.id_solicitante
+            "usuarios" AS "User"
+            ON "User"."id_usuario" = Solic."id_solicitante"
         INNER JOIN 
-            [BibliotecaMLC].[dbo].[Permisos_archivo] AS Perm
-            ON Perm.id_archivo = Arch.id_archivo AND Perm.id_rol = [User].id_rol
+            "permisos_archivo" AS Perm
+            ON Perm."id_archivo" = Arch."id_archivo" AND Perm."id_rol" = "User"."id_rol"
         WHERE 
-            Solic.aprobacionGerencia = 1 
-            AND Solic.aprobacionAdministracion = 1
-            and Solic.id_solicitud =@id_Solicitud
-            `;
+            Solic."aprobaciongerencia" = TRUE 
+            AND Solic."aprobacionadministracion" = TRUE
+            AND Solic."id_solicitud" = $1
+        `;
 
-        const result = await pool.request()
-            .input('id_Solicitud', sql.Int, id_Solicitud)
-            .query(query);
-       return result.recordset[0]
-
+        const result = await pool.query(query, [id_Solicitud]);
+        console.log('result',result)
+        return result.rows[0]; // PostgreSQL devuelve los resultados en `rows`
     } catch (error) {
         console.error('Error al obtener archivos permitidos:', error.message);
-       return {}
+        return {}; // Retorna un objeto vacío en caso de error
     }
 }

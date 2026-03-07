@@ -20,6 +20,8 @@ app.use(session({
 
 app.use(cookieParser())
 
+
+//Cambios que quiero subir a producci[on]
 const corsOptions = {
     // origin: 'https://localhost:5173', 
     origin: "https://production.d1zbcfn7l9hhpx.amplifyapp.com",

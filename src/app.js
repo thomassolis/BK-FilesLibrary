@@ -21,8 +21,8 @@ app.use(session({
 app.use(cookieParser())
 
 const corsOptions = {
-    origin: 'https://localhost:5173', 
-    // origin: "https://production.d1zbcfn7l9hhpx.amplifyapp.com",
+    //origin: 'https://localhost:5173', 
+    origin: "https://production.d1zbcfn7l9hhpx.amplifyapp.com",
     credentials: true,
 };
 

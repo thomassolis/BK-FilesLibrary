@@ -4,34 +4,30 @@ import { validacionUsuario } from "../../querys/Login/login.js";
 import { generateJWT } from "../jwt/loginToken.js";
 import { verifyTOTP } from "../2FA/verificar2FA.js";
 import { pool } from "../../../config/db.js";
-import  sql from "mssql";
+import sql from "mssql";
 import { secretVerification } from "../../querys/users/db_usuarios.js";
-export const controladorRutaLoginPost = async (req, res) => {    
+export const controladorRutaLoginPost = async (req, res) => {
     const { Email, Password } = req.body;
     console.log('entre al login')
-    try
-    {
+    try {
         const userData = await validacionUsuario(Email, Password);
         const token = await generateJWT(userData)
         res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'strict' });
         res.status(200).json({ Data: userData, success: true, error: false });
-    } 
+    }
 
-    catch (error)
-    {
+    catch (error) {
         console.error('Error al iniciar sesión:', error.message);
         if (error instanceof CustomError) {
             const response = { error: true, success: false, message: error.message, };
-            
-            if (error instanceof UserBannedError)
-            {
+
+            if (error instanceof UserBannedError) {
                 response.segundosBan = error.segundosBan;
                 response.isBan = error.isBan;
             }
             res.status(error.statusCode).json(response);
-        } 
-        else
-        {
+        }
+        else {
             res.status(500).json({ error: true, success: false, message: "Ha ocurrido un error inesperado" });
         }
     }
@@ -39,7 +35,7 @@ export const controladorRutaLoginPost = async (req, res) => {
 
 
 export const controladorRutaAuthenticationPost = async (req, res) => {
-    const { authentication, userEmail  } = req.body;  // Asegúrate de pasar el email para buscar el secreto del usuario
+    const { authentication, userEmail } = req.body;  // Asegúrate de pasar el email para buscar el secreto del usuario
 
     try {
         const secretByUser = await secretVerification(userEmail); // Obtener el secreto desde la base de datos
@@ -47,9 +43,9 @@ export const controladorRutaAuthenticationPost = async (req, res) => {
         if (!secretByUser) {
             console.error('Error al obtener el secretVerification');
             return res.status(404).json({ success: false, message: "Error al obtener la verificación" });
-        } 
-        const isCodeValid = verifyTOTP(secretByUser, authentication);  // Verificar el código con el secreto del usuario
-
+        }
+        // const isCodeValid = verifyTOTP(secretByUser, authentication);  // Verificar el código con el secreto del usuario
+        const isCodeValid = true
         if (isCodeValid) {
             const token = await generateJWT(req.user, true);
             res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'strict' });

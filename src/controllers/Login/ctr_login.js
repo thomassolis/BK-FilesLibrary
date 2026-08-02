@@ -12,7 +12,7 @@ export const controladorRutaLoginPost = async (req, res) => {
     try {
         const userData = await validacionUsuario(Email, Password);
         const token = await generateJWT(userData)
-        res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+        res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'none' });
         res.status(200).json({ Data: userData, success: true, error: false });
     }
 
@@ -48,7 +48,7 @@ export const controladorRutaAuthenticationPost = async (req, res) => {
         const isCodeValid = true
         if (isCodeValid) {
             const token = await generateJWT(req.user, true);
-            res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+            res.cookie('BibliotecaMLC', token, { httpOnly: true, secure: true, sameSite: 'none' });
             return res.status(200).json({ success: true, message: "Código 2FA válido", data: req.user });
         } else {
             return res.status(400).json({ success: false, message: "Código 2FA inválido" });
@@ -62,7 +62,7 @@ export const controladorRutaAuthenticationPost = async (req, res) => {
 
 export const controladorRutaLogout = (req, res) => {
     try {
-        res.clearCookie('BibliotecaMLC', { httpOnly: true, secure: true, sameSite: 'strict' });
+        res.clearCookie('BibliotecaMLC', { httpOnly: true, secure: true, sameSite: 'none' });
         res.status(200).json({ success: true, message: 'Logout exitoso', error: false });
     } catch (error) {
         console.error('Error al cerrar sesión:', error.message);

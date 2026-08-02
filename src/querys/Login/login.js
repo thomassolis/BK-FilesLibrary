@@ -7,6 +7,7 @@ import CustomError from "../../errors/CustomErros.js";
 import { InternalServerError } from "../../errors/serverErrors.js";
 
 export const validacionUsuario = async (Email, PassWord) => {
+  console.log('Data', Email, PassWord)
   try {
     const query = `
       SELECT
@@ -59,24 +60,24 @@ export const validacionUsuario = async (Email, PassWord) => {
 
 
 export const ObtenerEmailPorIdUser = async (userID) => {
-    try {
-        const query = `
+  try {
+    const query = `
             SELECT email
             FROM public.usuarios
             WHERE id_usuario = $1
             LIMIT 1
         `;
-        
-        const { rows } = await pool.query(query, [userID]);
 
-        if (rows.length === 0) {
-            console.warn(`No se encontró un usuario con el ID ${userID}`);
-            return null;
-        }
+    const { rows } = await pool.query(query, [userID]);
 
-        return rows[0].email;
-    } catch (error) {
-        console.error("Error al obtener el email del usuario:", error);
-        throw new Error("Error al obtener el email del usuario");
+    if (rows.length === 0) {
+      console.warn(`No se encontró un usuario con el ID ${userID}`);
+      return null;
     }
+
+    return rows[0].email;
+  } catch (error) {
+    console.error("Error al obtener el email del usuario:", error);
+    throw new Error("Error al obtener el email del usuario");
+  }
 };

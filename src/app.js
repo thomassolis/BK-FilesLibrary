@@ -23,7 +23,7 @@ app.use(cookieParser())
 const corsOptions = {
     // origin: 'https://localhost:5173',
     // origin: "https://production.d1zbcfn7l9hhpx.amplifyapp.com",
-    origin: 'https://mainproduccion.d1kj3tgpssn5w.amplifyapp.com'
+    origin: 'https://mainproduccion.d1kj3tgpssn5w.amplifyapp.com',
     credentials: true,
 };
 
